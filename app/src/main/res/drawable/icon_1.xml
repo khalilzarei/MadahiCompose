@@ -1,0 +1,16 @@
+<svg height="200"
+    viewBox="0 0 200 200"
+    width="200"
+    xmlns="http://www.w3.org/2000/svg">
+    <!-- مستطیل با گوشه‌های گرد (rx = شعاع گوشه) -->
+    <rect
+        fill="#4E9F3D"
+        height="180"
+        rx="20"
+        ry="20"
+        stroke="#D4AF37"
+        stroke-width="3"
+        width="180"
+        x="10"
+        y="10" />
+</svg>
