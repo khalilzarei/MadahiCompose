@@ -29,8 +29,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -43,7 +43,7 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui.graphics)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
+//    implementation(libs.core.ktx)
 
     implementation(libs.kotlin.coroutines.android)
     implementation(libs.kotlin.coroutines.core)

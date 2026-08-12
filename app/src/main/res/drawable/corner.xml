@@ -4,6 +4,7 @@
     android:height="480dp"
     android:viewportWidth="482"
     android:viewportHeight="446"
+    
     tools:ignore="VectorRaster">
     <path
         android:fillColor="#FFA1841C"

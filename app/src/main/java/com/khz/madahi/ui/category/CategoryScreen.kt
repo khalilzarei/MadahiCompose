@@ -2,6 +2,7 @@
 package com.khz.madahi.ui.category
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +48,7 @@ import com.khz.madahi.ui.common.BottomBarView
 import com.khz.madahi.ui.common.BottomTab
 import com.khz.madahi.ui.common.EmptyContentScreen
 import com.khz.madahi.ui.common.ErrorContentScreen
+import com.khz.madahi.ui.theme.PrimaryGreenDark
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,6 +127,15 @@ fun CategoryScreen(
     ) { paddingValues ->
         Box(
             modifier = Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF07130c).copy(0.9f),
+                            PrimaryGreenDark.copy(0.5f),
+                            Color(0xFF07130c).copy(0.5f),
+                        )
+                    )
+                )
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
@@ -233,7 +245,6 @@ fun CategoryScreen(
             })
     }
 }
-
 
 //@Preview(
 //    showBackground = true,
