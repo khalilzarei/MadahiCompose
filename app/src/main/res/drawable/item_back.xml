@@ -5,17 +5,16 @@
     android:viewportWidth="1000"
     android:viewportHeight="280">
     <!-- ===== پس‌زمینه گرادیانتی (تمام‌عرض — زیر همه تزئینات) ===== -->
-    <path
-        android:pathData="M12,6L988,6Q994,6 994,12L994,268Q994,274 988,274L12,274Q6,274 6,268L6,12Q6,6 12,6Z">
+    <path android:pathData="M12,6L988,6Q994,6 994,12L994,268Q994,274 988,274L12,274Q6,274 6,268L6,12Q6,6 12,6Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:type="linear"
-                android:startX="500"
-                android:startY="6"
+                android:endColor="#FF0B0B0B"
                 android:endX="500"
                 android:endY="274"
                 android:startColor="#FF1F3A1F"
-                android:endColor="#FF0B0B0B" />
+                android:startX="500"
+                android:startY="6"
+                android:type="linear" />
         </aapt:attr>
     </path>
     <path

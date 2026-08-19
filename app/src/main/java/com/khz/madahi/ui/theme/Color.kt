@@ -90,8 +90,9 @@ object DangerDialogColors {
 }
 
 // ============ رنگ‌های اصلی (سبز) ============
-val PrimaryGreen = Color(0xFF4E9F3D)        // #4e9f3d
-val PrimaryGreenDark = Color(0xFF1B5E20)    // #1b5e20
+val PrimaryGreen = Color(0xFF4E9F3D)
+// #4e9f3d
+val PrimaryGreenDark = Color(0xFF1B5E20)    // #FF07130c
 val PrimaryGreenLight = Color(0xFF66BB6A)   // #66bb6a
 val SecondaryGreen = Color(0xFF388E3C)      // #388e3c
 val DarkGreen = Color(0xFF388E3C)      // #388e3c

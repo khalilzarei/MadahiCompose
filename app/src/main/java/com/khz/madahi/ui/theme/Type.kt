@@ -16,7 +16,6 @@ import com.khz.madahi.R
 //   ۱) فایل ttf را در app/src/main/res/font/ قرار بده
 //   ۲) یک خط به availableFonts اضافه کن:  "کلید" to "نام نمایشی"
 //   ۳) یک case به fontFamilyFor اضافه کن
-//   ۴) در SettingScreen لیست انتخاب فونت را به‌روز کن
 //   (کلید باید دقیقاً همان مقداری باشد که در PreferencesManager.font ذخیره می‌شود)
 // ============================================================
 object FontCatalog {
@@ -26,11 +25,21 @@ object FontCatalog {
 
     /** لیست فونت‌های قابل انتخاب در تنظیمات: (کلید → نام نمایشی) */
     val availableFonts: Map<String, String> = linkedMapOf(
-        DEFAULT_FONT_KEY to "وزیر (پیش‌فرض)"
+        DEFAULT_FONT_KEY to "وزیر (پیش‌فرض)",
+        "yekan.ttf" to "یکان",
+        "titr.ttf" to "تیتر (عنوان)",
+        "lalezar.ttf" to "لاله‌زار (عنوان)",
+        "iransans.ttf" to "ایران‌سنس",
+        "estedad.ttf" to "استعداد",
+        "shabnam.ttf" to "شبنم",
+        "sahel.ttf" to "ساحل",
+        "samim.ttf" to "صمیم",
+        "tanha.ttf" to "تنها",
+        "gandom.ttf" to "گندم",
+        "nahid.ttf" to "ناهید",
+        "parastoo.ttf" to "پرستو"
         // ─── فونت‌های آینده را اینجا اضافه کن ───
-        // "iransans.ttf" to "ایران‌سنس",
-        // "lalezar.ttf"  to "لاله‌زار",
-        // "nastaliq.ttf" to "نستعلیق",
+        // "mikhak.ttf" to "میخک",
     )
 
     /**
@@ -40,12 +49,22 @@ object FontCatalog {
     @Composable
     fun fontFamilyFor(key: String?): FontFamily = when (key) {
         DEFAULT_FONT_KEY -> vazirFontFamily()
-        // ─── فونت‌های آینده را اینجا اضافه کن ───
-        // "iransans.ttf" -> iransansFontFamily()
+        "yekan.ttf"      -> yekanFontFamily()
+        "titr.ttf"       -> titrFontFamily()
+        "lalezar.ttf"    -> lalezarFontFamily()
+        "iransans.ttf"   -> iransansFontFamily()
+        "estedad.ttf"    -> estedadFontFamily()
+        "shabnam.ttf"    -> shabnamFontFamily()
+        "sahel.ttf"      -> sahelFontFamily()
+        "samim.ttf"      -> samimFontFamily()
+        "tanha.ttf"      -> tanhaFontFamily()
+        "gandom.ttf"     -> gandomFontFamily()
+        "nahid.ttf"      -> nahidFontFamily()
+        "parastoo.ttf"   -> parastooFontFamily()
         else             -> vazirFontFamily()
     }
 
-    // ================== فونت وزیر (Vazirmatn) ==================
+    // ================== وزیر (Vazirmatn) — ۴ وزن ==================
     @Composable
     fun vazirFontFamily(): FontFamily = FontFamily(
         Font(
@@ -62,6 +81,158 @@ object FontCatalog {
         ),
         Font(
             R.font.vazir_bold,
+            FontWeight.Bold
+        )
+    )
+
+    // ================== یکان (Yekan) — تک‌وزن ==================
+    @Composable
+    fun yekanFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.yekan_regular,
+            FontWeight.Normal
+        )
+    )
+
+    // ================== تیتر (Titr) — تک‌وزن، عنوان‌نویس ==================
+    @Composable
+    fun titrFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.titr_regular,
+            FontWeight.Normal
+        )
+    )
+
+    // ================== لاله‌زار (Lalezar) — تک‌وزن، تزئینی ==================
+    @Composable
+    fun lalezarFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.lalezar_regular,
+            FontWeight.Normal
+        )
+    )
+
+    // ================== ایران‌سنس (IRANSans) — ۳ وزن ==================
+    @Composable
+    fun iransansFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.iransans_regular,
+            FontWeight.Normal
+        ),
+        Font(
+            R.font.iransans_medium,
+            FontWeight.Medium
+        ),
+        Font(
+            R.font.iransans_bold,
+            FontWeight.Bold
+        )
+    )
+
+    // ================== استعداد (Estedad) — ۳ وزن ==================
+    @Composable
+    fun estedadFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.estedad_regular,
+            FontWeight.Normal
+        ),
+        Font(
+            R.font.estedad_medium,
+            FontWeight.Medium
+        ),
+        Font(
+            R.font.estedad_bold,
+            FontWeight.Bold
+        )
+    )
+
+    // ================== شبنم (Shabnam) — ۳ وزن ==================
+    @Composable
+    fun shabnamFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.shabnam_regular,
+            FontWeight.Normal
+        ),
+        Font(
+            R.font.shabnam_medium,
+            FontWeight.Medium
+        ),
+        Font(
+            R.font.shabnam_bold,
+            FontWeight.Bold
+        )
+    )
+
+    // ================== ساحل (Sahel) — ۳ وزن ==================
+    @Composable
+    fun sahelFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.sahel_regular,
+            FontWeight.Normal
+        ),
+        Font(
+            R.font.sahel_semibold,
+            FontWeight.SemiBold
+        ),
+        Font(
+            R.font.sahel_bold,
+            FontWeight.Bold
+        )
+    )
+
+    // ================== صمیم (Samim) — ۳ وزن ==================
+    @Composable
+    fun samimFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.samim_regular,
+            FontWeight.Normal
+        ),
+        Font(
+            R.font.samim_medium,
+            FontWeight.Medium
+        ),
+        Font(
+            R.font.samim_bold,
+            FontWeight.Bold
+        )
+    )
+
+    // ================== تنها (Tanha) — تک‌وزن ==================
+    @Composable
+    fun tanhaFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.tanha_regular,
+            FontWeight.Normal
+        )
+    )
+
+    // ================== گندم (Gandom) — تک‌وزن ==================
+    @Composable
+    fun gandomFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.gandom_regular,
+            FontWeight.Normal
+        )
+    )
+
+    // ================== ناهید (Nahid) — تک‌وزن ==================
+    @Composable
+    fun nahidFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.nahid_regular,
+            FontWeight.Normal
+        )
+    )
+
+    // ================== پرستو (Parastoo) — ۲ وزن ==================
+    @Composable
+    fun parastooFontFamily(): FontFamily = FontFamily(
+        Font(
+            R.font.parastoo_regular,
+            FontWeight.Normal
+        ),
+        Font(
+            R.font.parastoo_bold,
             FontWeight.Bold
         )
     )

@@ -1,60 +1,66 @@
-// ui/category/BottomBarView.kt
+// ui/common/BottomBarView.kt
+
 package com.khz.madahi.ui.common
 
-import android.content.res.Configuration
-import androidx.compose.foundation.Image
+import android.R.attr.scaleX
+import android.R.attr.scaleY
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.khz.madahi.R
-import com.khz.madahi.ui.theme.BottomBarPalette
-import com.khz.madahi.ui.theme.MadahiTheme
-import com.khz.madahi.ui.theme.getBottomBarColors
+import com.khz.madahi.ui.components.GlassCard3D
+import com.khz.madahi.ui.theme.LocalMadahiColors
+import com.khz.madahi.ui.theme.MadahiThemeGreen
+import com.khz.madahi.ui.theme.gold
+import com.khz.madahi.ui.theme.goldLight
+import com.khz.madahi.ui.theme.primaryDark
+import com.khz.madahi.ui.theme.primaryLight
+import com.khz.madahi.ui.theme.surfaceGlass
+import com.khz.madahi.ui.theme.surfaceGlassLight
+import com.khz.madahi.ui.theme.textPrimary
 
-// ============ تب‌های پایین ============
+// ============================================================
+// تب‌های پایین
+// ============================================================
+
 enum class BottomTab {
     MESSAGE,
     PROFILE,
@@ -64,9 +70,13 @@ enum class BottomTab {
     ABOUT
 }
 
+// ============================================================
+// اکشن‌های BottomBar
+// ============================================================
+
 data class BottomBarActions(
     val onBackClick: () -> Unit = {},
-    val onHomeClick: () -> Unit = {},   // اکشن دکمه‌ی وسط (FAB)
+    val onHomeClick: () -> Unit = {},
     val onCategoryClick: () -> Unit = {},
     val onFavoritesClick: () -> Unit = {},
     val onSettingsClick: () -> Unit = {},
@@ -75,280 +85,446 @@ data class BottomBarActions(
     val onMessageClick: () -> Unit = {},
 )
 
-// ============ شکل سفارشی نوار پایین با فرورفتگی وسط ============
-// این کلاس همان کاری را انجام می‌دهد که در مقاله با Canvas + Shape توضیح داده شد:
-// یک Path می‌کشد که علاوه بر گوشه‌های گرد بالا، یک کمان (Cutout) برای جا دادن FAB دارد.
-class BottomNavCutoutShape(
-    private val cornerRadius: Dp = 10.dp,
-    private val cutoutRadius: Dp = 32.dp,
-    private val cutoutMargin: Dp = 6.dp
-) : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
-    ): Outline {
-        val cornerRadiusPx = with(density) { cornerRadius.toPx() }
-        val cutoutRadiusPx = with(density) { cutoutRadius.toPx() }
-        val cutoutMarginPx = with(density) { cutoutMargin.toPx() }
-        val totalCutoutRadiusPx = cutoutRadiusPx + cutoutMarginPx
-        val centerX = size.width / 2f
-
-        val path = Path().apply {
-            // گوشه‌ی بالا-چپ
-            moveTo(
-                0f,
-                cornerRadiusPx
-            )
-            quadraticBezierTo(
-                0f,
-                0f,
-                cornerRadiusPx,
-                0f
-            )
-
-            // خط تا شروع فرورفتگی
-            lineTo(
-                centerX - totalCutoutRadiusPx,
-                0f
-            )
-
-            // کمان فرورفتگی (Cutout) برای FAB
-            arcTo(
-                rect = Rect(
-                    left = centerX - totalCutoutRadiusPx,
-                    top = -totalCutoutRadiusPx,
-                    right = centerX + totalCutoutRadiusPx,
-                    bottom = totalCutoutRadiusPx
-                ),
-                startAngleDegrees = 180f,
-                sweepAngleDegrees = -180f,
-                forceMoveTo = false
-            )
-
-            // خط تا گوشه‌ی بالا-راست
-            lineTo(
-                size.width - cornerRadiusPx,
-                0f
-            )
-            quadraticBezierTo(
-                size.width,
-                0f,
-                size.width,
-                cornerRadiusPx
-            )
-
-            // پایین نوار
-            lineTo(
-                size.width,
-                size.height
-            )
-            lineTo(
-                0f,
-                size.height
-            )
-            close()
-        }
-
-        return Outline.Generic(path)
-    }
-}
+// ============================================================
+// BottomBar
+// ============================================================
 
 @Composable
 fun BottomBarView(
     selectedTab: BottomTab = BottomTab.CATEGORY,
-    actions: BottomBarActions = BottomBarActions()
+    actions: BottomBarActions = BottomBarActions(),
 ) {
-    val colors = getBottomBarColors()
-    val cutoutShape = remember {
-        BottomNavCutoutShape(
-            cornerRadius = 10.dp,
-            cutoutRadius = 32.dp,
-            cutoutMargin = 6.dp
-        )
-    }
 
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.TopCenter
+    GlassCard3D(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+            .height(92.dp),
     ) {
-        // ---------- خود نوار پایین با فرورفتگی وسط ----------
-        Box(
+        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(colors = colors.background),
-                    shape = cutoutShape
-                )
-                .border(
-                    width = 2.dp,
-                    color = colors.border,
-                    shape = cutoutShape
-                )
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                // ---- سه آیتم سمت راست ----
-                BottomBarItem(
-                    icon = Icons.Default.GridView,
-                    label = "دسته‌بندی",
-                    selected = selectedTab == BottomTab.CATEGORY,
-                    colors = colors,
-                    onClick = actions.onCategoryClick,
-                    modifier = Modifier.weight(1f)
-                )
-
-                BottomBarItem(
-                    icon = if (selectedTab == BottomTab.FAVORITES) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    label = "علاقه‌مندی",
-                    selected = selectedTab == BottomTab.FAVORITES,
-                    colors = colors,
-                    onClick = actions.onFavoritesClick,
-                    modifier = Modifier.weight(1f)
-                )
-
-                BottomBarItem(
-                    icon = Icons.Default.Settings,
-                    label = "تنظیمات",
-                    selected = selectedTab == BottomTab.SETTINGS,
-                    colors = colors,
-                    onClick = actions.onSettingsClick,
-                    modifier = Modifier.weight(1f)
-                )
-
-                // ---- فاصله‌ی خالی زیر FAB ----
-                Spacer(modifier = Modifier.weight(1f))
-
-                // ---- سه آیتم سمت چپ ----
-                BottomBarItem(
-                    icon = Icons.AutoMirrored.Filled.Message,
-                    label = "پیام ها",
-                    selected = selectedTab == BottomTab.MESSAGE,
-                    colors = colors,
-                    onClick = actions.onMessageClick,
-                    modifier = Modifier.weight(1f)
-                )
-
-                BottomBarItem(
-                    icon = Icons.Default.Person,
-                    label = "پروفایل",
-                    selected = selectedTab == BottomTab.PROFILE,
-                    colors = colors,
-                    onClick = actions.onProfileClick,
-                    modifier = Modifier.weight(1f)
-                )
-
-                BottomBarItem(
-                    icon = Icons.Default.Info,
-                    label = "درباره ما",
-                    selected = selectedTab == BottomTab.ABOUT,
-                    colors = colors,
-                    onClick = actions.onAboutClick,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        FloatingActionButton(
-            onClick = actions.onHomeClick,
-            containerColor = Color(0xFF074634),
-            contentColor = Color.White,
-            shape = CircleShape,
-            modifier = Modifier
-                .offset(y = (-38).dp)
-                .size(70.dp)
-                .border(
-                    width = 3.dp,
-                    color = Color(0xFFD4AF37),  // طلایی برای حاشیه
-                    shape = CircleShape
-                )
-        ) {
-            Image(
-                painter = painterResource(
-                    R.drawable.ic_fab_border // ✅ تصویر دارک
+                .fillMaxSize()
+                .padding(
+                    horizontal = 7.dp,
+                    vertical = 7.dp
                 ),
-                contentDescription = "Splash Background",
-                modifier = Modifier.size(60.dp),
-                contentScale = ContentScale.FillBounds
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
+            BottomBarItem(
+                icon = Icons.Default.GridView,
+                label = "دسته‌بندی",
+                selected = selectedTab == BottomTab.CATEGORY,
+                onClick = actions.onCategoryClick,
+                modifier = Modifier.weight(1f)
             )
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "افزودن به علاقه‌مندی‌ها",
-                modifier = Modifier.size(36.dp),
-                tint = Color.White
+
+            BottomBarItem(
+                icon = if (selectedTab == BottomTab.FAVORITES) {
+                    Icons.Default.Favorite
+                } else {
+                    Icons.Default.FavoriteBorder
+                },
+                label = "علاقه‌مندی‌ها",
+                selected = selectedTab == BottomTab.FAVORITES,
+                onClick = actions.onFavoritesClick,
+                modifier = Modifier.weight(1f)
             )
+
+            BottomBarFab { }
+
+            BottomBarItem(
+                icon = Icons.Default.Settings,
+                label = "تنظیمات",
+                selected = selectedTab == BottomTab.SETTINGS,
+                onClick = actions.onSettingsClick,
+                modifier = Modifier.weight(1f)
+            )
+
+            BottomBarItem(
+                icon = Icons.AutoMirrored.Filled.Message,
+                label = "پیام‌ها",
+                selected = selectedTab == BottomTab.MESSAGE,
+                onClick = actions.onMessageClick,
+                modifier = Modifier.weight(1f)
+            )
+
         }
+
     }
 }
 
-// ============ آیتم منوی پایین ============
+// ============================================================
+// آیتم سه‌بعدی BottomBar
+// ============================================================
+
 @Composable
 private fun BottomBarItem(
     icon: ImageVector,
     label: String,
     selected: Boolean,
-    colors: BottomBarPalette,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(
-            modifier = Modifier.padding(
-                10.dp
+
+    val colors = LocalMadahiColors.current
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val surfaceOffset by animateDpAsState(
+        targetValue = if (isPressed) 3.dp else 0.dp,
+        label = "bottom_item_offset"
+    )
+
+    val shadowElevation by animateDpAsState(
+        targetValue = when {
+            isPressed -> 3.dp
+            selected  -> 8.dp
+            else      -> 0.dp
+        },
+        label = "bottom_item_shadow"
+    )
+
+    val shape = RoundedCornerShape(17.dp)
+
+    Box(
+        modifier = modifier
+            .height(70.dp)
+            .padding(horizontal = 3.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
             ),
+        contentAlignment = Alignment.Center,
+
+        ) {
+
+        if (selected) {
+            GlassCard3D(
+                modifier = modifier
+                    .fillMaxSize()
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = shape,
+                        ambientColor = Color.Red,
+                        spotColor = Color.Red,
+                    )
+            ) {
+                Column(
+                    modifier = modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        tint = colors.textPrimary,
+                        modifier = Modifier.size(25.dp)
+                    )
+
+                    Text(
+                        text = label,
+                        color = colors.textPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        } else {
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = colors.textPrimary,
+                    modifier = Modifier.size(25.dp)
+                )
+
+                Text(
+                    text = label,
+                    color = colors.textPrimary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+// ============================================================
+// FAB سه‌بعدی
+// ============================================================
+
+@Composable
+private fun BottomBarFab(
+    onClick: () -> Unit
+) {
+    val colors = LocalMadahiColors.current
+
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
+
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    /*
+     * هنگام لمس، سطح اصلی کمی پایین می‌رود.
+     */
+    val surfaceOffset by animateDpAsState(
+        targetValue = if (isPressed) 4.dp else 0.dp,
+        label = "fab_surface_offset"
+    )
+
+    /*
+     * هنگام لمس، سایه کمتر می‌شود.
+     */
+    val shadowElevation by animateDpAsState(
+        targetValue = if (isPressed) 5.dp else 16.dp,
+        label = "fab_shadow"
+    )
+
+    val shape = CircleShape
+
+    Box(
+        modifier = Modifier.size(82.dp),
+        contentAlignment = Alignment.Center
+    ) {
+
+        /*
+         * =====================================================
+         * لایه‌ی زیرین
+         * =====================================================
+         *
+         * این لایه ضخامت سه‌بعدی FAB را ایجاد می‌کند.
+         */
+
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .offset(y = 7.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            colors.primaryDark,
+                            colors.primaryDark.copy(alpha = 0.90f),
+                            Color.Black.copy(alpha = 0.45f)
+                        )
+                    ),
+                    shape = shape
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color.Black.copy(alpha = 0.45f),
+                    shape = shape
+                )
+        )
+
+
+        /*
+         * =====================================================
+         * بدنه‌ی اصلی Glass 3D
+         * =====================================================
+         */
+
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .offset(y = surfaceOffset)
+                .shadow(
+                    elevation = shadowElevation,
+                    shape = shape,
+                    ambientColor = Color.Black.copy(alpha = 0.70f),
+                    spotColor = Color.Black.copy(alpha = 0.85f)
+                )
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            colors.surfaceGlassLight.copy(alpha = 0.98f),
+                            colors.surfaceGlass.copy(alpha = 0.96f),
+                            colors.surfaceGlass.copy(alpha = 0.92f),
+                            colors.primaryDark.copy(alpha = 0.72f)
+                        )
+                    ),
+                    shape = shape
+                )
+                .border(
+                    width = 1.5.dp,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.34f),
+                            colors.primaryLight.copy(alpha = 0.24f),
+                            colors.gold.copy(alpha = 0.20f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = shape
+                )
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
             contentAlignment = Alignment.Center
         ) {
+
+            /*
+             * =================================================
+             * Highlight اصلی
+             * =================================================
+             */
+
+            Box(
+                modifier = Modifier
+                    .size(68.dp)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.14f),
+                                Color.White.copy(alpha = 0.045f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+            )
+
+
+            /*
+             * =================================================
+             * نور نقطه‌ای شیشه
+             * =================================================
+             */
+
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .offset(
+                        x = (-11).dp,
+                        y = (-14).dp
+                    )
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.22f),
+                                Color.White.copy(alpha = 0.07f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+            )
+
+
+            /*
+             * =================================================
+             * حلقه‌ی طلایی داخلی
+             * =================================================
+             */
+
+            Box(
+                modifier = Modifier
+                    .size(58.dp)
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colors.goldLight.copy(alpha = 0.35f),
+                                colors.gold.copy(alpha = 0.18f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+            )
+
+
+            /*
+             * =================================================
+             * Inner Glass
+             * =================================================
+             */
+
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                colors.primaryLight.copy(alpha = 0.12f),
+                                colors.primary.copy(alpha = 0.08f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.13f),
+                        shape = CircleShape
+                    )
+            )
+
+
+            /*
+             * =================================================
+             * آیکن
+             * =================================================
+             */
+
             Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = if (selected) colors.selectedIcon else colors.unselectedIcon,
-                modifier = Modifier.size(30.dp)
+                imageVector = Icons.Default.Add,
+                contentDescription = "افزودن",
+                tint = colors.gold,
+                modifier = Modifier.size(34.dp)
             )
         }
-
-        Text(
-            modifier = Modifier.padding(bottom = 3.dp),
-            text = label,
-            fontSize = if (selected) 15.sp else 13.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Thin,
-            color = if (selected) colors.selectedText else colors.unselectedText
-        )
     }
 }
 
-// ============ Preview ============
-@Preview(
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
+// ============================================================
+// Preview
+// ============================================================
+
+@Preview()
 @Composable
-fun CategoryBottomBarDarkPreview() {
-    MadahiTheme(darkTheme = false) {
+fun CategoryBottomBarPreview() {
+
+    MadahiThemeGreen(
+        darkTheme = false
+    ) {
+
         BottomBarView(
-            selectedTab = BottomTab.PROFILE,
-            actions = BottomBarActions()
+            selectedTab = BottomTab.CATEGORY,
+            actions = BottomBarActions(),
         )
     }
 }
 
-//@Preview(
-//    showBackground = true,
-//    uiMode = Configuration.UI_MODE_NIGHT_NO
-//)
-//@Composable
-//fun CategoryBottomBarLightPreview() {
-//    MadahiTheme(darkTheme = false) {
-//        CategoryBottomBar(
-//            selectedTab = BottomTab.SETTINGS,
-//            onFavoritesClick = {},
-//            onSettingsClick = {})
-//    }
-//}
+@Preview()
+@Composable
+fun CategoryBottomBarPreviewDark() {
+
+    MadahiThemeGreen(
+        darkTheme = true
+    ) {
+
+        BottomBarView(
+            selectedTab = BottomTab.CATEGORY,
+            actions = BottomBarActions(),
+        )
+    }
+}

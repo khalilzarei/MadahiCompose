@@ -46,7 +46,8 @@ fun CategoryDialogContent(
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit // ✅ اضافه شدن اکشن حذف
 ) {
     val colors = getDangerDialogColors()
 
@@ -98,7 +99,7 @@ fun CategoryDialogContent(
                     )
             ) {
                 Text(
-                    text = if (isEditMode) "ویرایش دسته‌بندی" else "📁 دسته‌بندی جدید",
+                    text = if (isEditMode) "✏️ ویرایش دسته‌بندی" else "📁 دسته‌بندی جدید",
                     color = colors.title,
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -126,14 +127,16 @@ fun CategoryDialogContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // دکمه سمت چپ: در حالت ویرایش «حذف» و در حالت ساخت جدید «انصراف»
                     RibbonButton(
-                        text = "انصراف",
-                        onClick = onDismiss,
+                        text = if (isEditMode) "حذف" else "انصراف",
+                        onClick = if (isEditMode) onDelete else onDismiss,
                         modifier = Modifier.weight(1f),
                         isDanger = true
                     )
+                    // دکمه سمت راست: در حالت ویرایش «ذخیره» و در حالت ساخت جدید «افزودن»
                     RibbonButton(
-                        text = if (isEditMode) "ویرایش" else "افزودن",
+                        text = if (isEditMode) "ذخیره" else "افزودن",
                         onClick = onConfirm,
                         modifier = Modifier.weight(1f)
                     )
@@ -152,7 +155,8 @@ fun CategoryDialog(
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    onDelete: () -> Unit // ✅ اضافه شدن اکشن حذف
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Dialog(
@@ -175,7 +179,6 @@ fun CategoryDialog(
                 tonalElevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
-
                     .wrapContentHeight()
             ) {
                 CategoryDialogContent(
@@ -185,7 +188,8 @@ fun CategoryDialog(
                     onTitleChange = onTitleChange,
                     onDescriptionChange = onDescriptionChange,
                     onConfirm = onConfirm,
-                    onDismiss = onDismiss
+                    onDismiss = onDismiss,
+                    onDelete = onDelete // ✅ پاس دادن اکشن حذف به محتوای دیالوگ
                 )
             }
         }

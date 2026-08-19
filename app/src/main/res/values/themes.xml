@@ -2,7 +2,28 @@
 <resources>
 
     <style name="Theme.Madahi" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <!-- RTL -->
         <item name="android:layoutDirection">rtl</item>
         <item name="android:textDirection">rtl</item>
+        <item name="android:textAlignment">viewStart</item>
+
+        <!-- Window -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- شفاف کردن System Bar -->
+        <item name="android:statusBarColor">
+            @android:color/transparent
+        </item>
+
+        <item name="android:navigationBarColor">
+            @android:color/transparent
+        </item>
+
+        <!-- Status bar icon appearance -->
+        <item name="android:windowLightStatusBar">false</item>
+
     </style>
+
 </resources>

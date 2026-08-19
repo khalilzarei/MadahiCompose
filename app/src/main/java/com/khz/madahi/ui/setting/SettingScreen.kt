@@ -2,37 +2,39 @@
 package com.khz.madahi.ui.setting
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.TextFields
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -44,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,8 +54,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.ui.common.BottomBarActions
-import com.khz.madahi.ui.common.BottomBarView
 import com.khz.madahi.ui.common.BottomTab
+import com.khz.madahi.ui.components.BaseScreen
+import com.khz.madahi.ui.components.GlassCard3D
+import com.khz.madahi.ui.components.Mini3DButton
+import com.khz.madahi.ui.theme.FontCatalog
+import com.khz.madahi.ui.theme.MadahiThemeGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,316 +73,375 @@ fun SettingScreen(
         mutableStateOf(preferencesManager.isNightMode)
     }
 
-    Scaffold(
-        bottomBar = {
-            BottomBarView(
-                selectedTab = BottomTab.SETTINGS,
-                actions = bottomBarActions,
-            )
-        }) { paddingValues ->
-        Column(
+    BaseScreen(
+        bottomBarActions = bottomBarActions,
+        title = "تنظیمات",
+        subtitle = "",
+        selectedBottomTab = BottomTab.SETTINGS,
+        onHeaderBottonClicked = {},
+    ) {
+
+        //region BODY
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
         ) {
-            // ============ هدر ============
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "⚙️ تنظیمات",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
 
-                IconButton(
-                    onClick = bottomBarActions.onBackClick
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "بازگشت",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ============ کارت تنظیمات ============
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
+            GlassCard3D {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
                     // ✅ دارک مد
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    GlassCard3D {
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = if (isDarkMode) {
-                                    Icons.Default.DarkMode
-                                } else {
-                                    Icons.Default.LightMode
-                                },
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "حالت شب",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (isDarkMode) {
+                                        Icons.Default.DarkMode
+                                    } else {
+                                        Icons.Default.LightMode
+                                    },
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
                                 )
-                                Text(
-                                    text = if (isDarkMode) "فعال 🌙" else "غیرفعال ☀️",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "حالت شب",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = if (isDarkMode) "فعال 🌙" else "غیرفعال ☀️",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
-                        }
 
-                        Switch(
-                            checked = isDarkMode,
-                            onCheckedChange = { isChecked ->
-                                isDarkMode = isChecked
-                                preferencesManager.isNightMode = isChecked
-                                (context as? ComponentActivity)?.recreate()
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            Switch(
+                                checked = isDarkMode,
+                                onCheckedChange = { isChecked ->
+                                    isDarkMode = isChecked
+                                    preferencesManager.isNightMode = isChecked
+                                    (context as? ComponentActivity)?.recreate()
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
                             )
-                        )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Divider(
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(20.dp),
+                        thickness = DividerDefaults.Thickness,
+                        color = MaterialTheme.colorScheme.outline
                     )
 
-                    // ✅ تنظیمات فونت (نمونه)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    //region ✅ تنظیمات فونت (نمونه)
+// ============ انتخاب فونت ============
+                    var showFontDialog by remember { mutableStateOf(false) }
+                    val currentFontKey = preferencesManager.font
+
+                    GlassCard3D(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showFontDialog = true }) {
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.TextFields,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.TextFields,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = "فونت",
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                Text(
-                                    text = preferencesManager.font,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
-                        }
-
-                        TextButton(
-                            onClick = { /* باز کردن دیالوگ انتخاب فونت */ }) {
-                            Text("تغییر")
+                            // نام فونت انتخابی — با فونت خودش نمایش داده می‌شود
+                            Text(
+                                text = FontCatalog.availableFonts[currentFontKey]
+                                        ?: "وزیر",
+                                fontFamily = FontCatalog.fontFamilyFor(currentFontKey),
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+// ============ دیالوگ انتخاب فونت ============
+                    if (showFontDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showFontDialog = false },
+                            title = {
+                                Text(
+                                    text = "انتخاب فونت",
+                                    fontFamily = FontCatalog.fontFamilyFor(currentFontKey)
+                                )
+                            },
+                            text = {
+                                Column(
+                                    modifier = Modifier
+                                        .heightIn(max = 420.dp)
+                                        .verticalScroll(rememberScrollState())
+                                ) {
+                                    FontCatalog.availableFonts.forEach { (key, label) ->
+                                        val isSelected = key == currentFontKey
+                                        val fontFamily = FontCatalog.fontFamilyFor(key)
+                                        // نام تمیز بدون پرانتز (مثلاً «تیتر (عنوان)» → «تیتر»)
+                                        val shortName = label.substringBefore("(")
+                                            .trim()
 
-                    Divider(
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    preferencesManager.font = key
+                                                    showFontDialog = false
+                                                    // 🔄 بازسازی اکتیویتی تا فونت کل اپ عوض شود
+                                                    (context as? ComponentActivity)?.recreate()
+                                                }
+                                                .background(
+                                                    color = if (isSelected) {
+                                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                                    } else {
+                                                        Color.Transparent
+                                                    },
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                                .padding(
+                                                    horizontal = 12.dp,
+                                                    vertical = 10.dp
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically) {
+                                            Row(modifier = Modifier.weight(1f)) {
+                                                // ۱) نام فونت — با فونت خودش، درشت
+                                                Text(
+                                                    text = label,
+                                                    fontFamily = fontFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 17.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Spacer(modifier = Modifier.width(20.dp))
+                                                // ۲) جمله نمونه — با فونت خودش
+                                                Text(
+                                                    text = "این نمونه فونت $shortName است",
+                                                    fontFamily = fontFamily,
+                                                    fontSize = 13.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
+                                                )
+                                            }
+
+                                            // تیک فونت انتخابی
+                                            if (isSelected) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { showFontDialog = false }) {
+                                    Text("بستن")
+                                }
+                            })
+                    }
+
+                    //endregion
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(20.dp),
+                        thickness = DividerDefaults.Thickness,
+                        color = MaterialTheme.colorScheme.outline
                     )
 
-                    // ✅ اندازه فونت
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    //region  ✅ اندازه فونت
+
+                    GlassCard3D {
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.FormatSize,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "اندازه فونت",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FormatSize,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "اندازه فونت",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+
+                                Mini3DButton(
+                                    imageVector = Icons.Default.Remove,
+                                    onClick = {
+                                        if (preferencesManager.fontSize > 11) {
+                                            preferencesManager.fontSize--
+                                            (context as? ComponentActivity)?.recreate()
+                                        }
+                                    },
                                 )
                                 Text(
                                     text = "${preferencesManager.fontSize}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
                                 )
-                            }
-                        }
 
-                        Row {
-                            IconButton(
-                                onClick = {
-                                    if (preferencesManager.fontSize > 11) {
-                                        preferencesManager.fontSize--
-                                        (context as? ComponentActivity)?.recreate()
-                                    }
-                                }) {
-                                Icon(
-                                    imageVector = Icons.Default.Remove,
-                                    contentDescription = "کاهش",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            Text(
-                                text = "${preferencesManager.fontSize}",
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            )
-                            IconButton(
-                                onClick = {
-                                    if (preferencesManager.fontSize < 35) {
-                                        preferencesManager.fontSize++
-                                        (context as? ComponentActivity)?.recreate()
-                                    }
-                                }) {
-                                Icon(
+                                Mini3DButton(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "افزایش",
-                                    tint = MaterialTheme.colorScheme.primary
+                                    onClick = {
+                                        if (preferencesManager.fontSize < 35) {
+                                            preferencesManager.fontSize++
+                                            (context as? ComponentActivity)?.recreate()
+                                        }
+                                    },
+                                )
+
+                            }
+                        }
+                    }
+
+                    //endregion
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(20.dp),
+                        thickness = DividerDefaults.Thickness,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+
+                    GlassCard3D {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { bottomBarActions.onAboutClick() }
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "درباره ما",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
+
+                            Icon(
+                                imageVector = Icons.Default.ArrowBackIosNew,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(20.dp),
+                        thickness = DividerDefaults.Thickness,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+
+                    GlassCard3D {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { bottomBarActions.onProfileClick() }
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "پروفایل",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            Icon(
+                                imageVector = Icons.Default.ArrowBackIosNew,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ============ درباره ما ============
-            Card(
-                onClick = bottomBarActions.onAboutClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "درباره ما",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowLeft,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ============ خروج از حساب ============
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Logout,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "خروج از حساب",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-
-                    TextButton(
-                        onClick = {
-                            // TODO: خروج از حساب
-                        },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("خروج")
-                    }
-                }
-            }
         }
+
+        //endregion
     }
 }
 
 @Preview(showSystemUi = true)
 @Composable
 fun SettingScreenPreview() {
-    SettingScreen(bottomBarActions = BottomBarActions())
+    MadahiThemeGreen(darkTheme = true) {
+        SettingScreen(bottomBarActions = BottomBarActions())
+    }
 }

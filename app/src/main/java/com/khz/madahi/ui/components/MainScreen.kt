@@ -11,7 +11,7 @@
  * (نه در Material3)، چون خودش داخلی از Canvas + Shape برای رسم فرورفتگی استفاده می‌کند.
  */
 
-package com.khz.madahi.ui.views
+package com.khz.madahi.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -142,7 +142,6 @@ fun MainScreenPreview() {
         MainScreen()
     }
 }
-
 
 @Composable
 fun AppBottomBar(navController: NavController) {

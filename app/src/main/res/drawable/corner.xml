@@ -2,9 +2,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:width="480dp"
     android:height="480dp"
+    android:tint="#FFFFC107"
     android:viewportWidth="482"
     android:viewportHeight="446"
-    
+
     tools:ignore="VectorRaster">
     <path
         android:fillColor="#FFA1841C"

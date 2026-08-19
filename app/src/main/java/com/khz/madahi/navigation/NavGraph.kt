@@ -1,6 +1,7 @@
 // navigation/NavGraph.kt
 package com.khz.madahi.navigation
 
+import android.util.Log.v
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -11,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -96,24 +98,6 @@ fun NavGraph(
         )
     }
 
-    val onProfileClick: () -> Unit = {
-        navController.navigate(Screen.ProfileScreen.route)
-    }
-    val onCategoryClick: () -> Unit = {
-        navController.navigate(Screen.CategoryScreen.route)
-    }
-    val onFavoritesClick: () -> Unit = {
-        navController.navigate(Screen.FavoritesScreen.route)
-    }
-    val onSettingsClick: () -> Unit = {
-        navController.navigate(Screen.SettingScreen.route)
-    }
-    val onAboutClick: () -> Unit = {
-        navController.navigate(Screen.AboutScreen.route)
-    }
-    val onMessageClick: () -> Unit = {
-        navController.navigate(Screen.MessageScreen.route)
-    }
 
     NavHost(
         navController = navController,
