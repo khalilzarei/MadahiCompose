@@ -51,9 +51,10 @@ fun SplashScreen(
     var showUpdateDialog by remember { mutableStateOf(false) }
     var updateUrl by remember { mutableStateOf("") }
 
-    // ✅ تشخیص تم دارک یا لایت
-    val isDarkTheme = MaterialTheme.colorScheme.background == Color(0xFF0B0B0B) ||
-            MaterialTheme.colorScheme.background == Color(0xFF1A1A1A)
+
+    val preferencesManager = PreferencesManager(context)
+
+    val isDarkTheme = preferencesManager.isNightMode
 
     val viewModelFactory = remember {
         SplashViewModelFactory(

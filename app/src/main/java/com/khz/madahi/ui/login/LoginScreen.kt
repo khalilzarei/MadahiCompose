@@ -138,7 +138,7 @@ fun LoginScreenContent(
 
             CircularImage(
                 image = painterResource(R.drawable.ic_launcher),
-                size = 160.dp
+                size = 200.dp
             )
 
             Spacer(Modifier.height(20.dp))
