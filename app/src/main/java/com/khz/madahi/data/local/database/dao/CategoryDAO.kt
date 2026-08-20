@@ -30,11 +30,11 @@ interface CategoryDAO {
     suspend fun delete(category: Category)
 
     @Query("DELETE FROM table_name_categories WHERE id = :categoryId")
-    suspend fun deleteById(categoryId: String)
+    suspend fun deleteById(categoryId: Int)
 
     @Query("DELETE FROM table_name_categories")
     suspend fun deleteAll()
 
     @Query("SELECT * FROM table_name_categories WHERE id = :categoryId")
-    suspend fun getById(categoryId: String): Category?
+    suspend fun getById(categoryId: Int): Category?
 }

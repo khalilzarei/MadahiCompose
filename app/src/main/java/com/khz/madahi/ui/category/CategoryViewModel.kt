@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.CategoryRepository
+import com.khz.madahi.helper.GUEST_USER_ID
+import com.khz.madahi.helper.extention.logD
 import com.khz.madahi.models.Category
 import com.khz.madahi.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,7 +61,7 @@ class CategoryViewModel(
 
             // ✅ سپس از سرور همگام‌سازی کن
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
             when (val result = categoryRepository.getCategories(userId)) {
                 is Result.Success -> {
                     _categories.value = result.data
@@ -91,6 +93,7 @@ class CategoryViewModel(
         _dialogDescription.value = category.description
         _editingCategory.value = category
         _isDialogVisible.value = true
+        logD("showEditCategoryDialog ${category.title}")
     }
 
     fun hideDialog() {
@@ -122,8 +125,9 @@ class CategoryViewModel(
             _uiState.value = CategoryUiState.Loading
 
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
+            logD("UserID = $userId token= ${preferencesManager.token} ")
             // ✅ به سرور ارسال کن
             when (val result = categoryRepository.addCategory(
                 userId,
@@ -202,7 +206,7 @@ class CategoryViewModel(
             _uiState.value = CategoryUiState.Loading
 
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
             // ✅ ارسال userId به repository
             when (val result = categoryRepository.deleteCategory(

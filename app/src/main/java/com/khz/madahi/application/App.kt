@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import com.khz.madahi.data.local.preferences.PreferencesManager
+import com.khz.madahi.data.remote.api.RetrofitClient
 
 class App : Application() {
 
@@ -19,6 +20,9 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        // ✅ مقداردهی اولیه RetrofitClient (برای اینترسپتور توکن)
+        RetrofitClient.init(this)
 
         // تنظیم Theme بر اساس Preferences
         applyTheme()

@@ -102,9 +102,13 @@ fun CategoryScreen(
                             subtitle = "",
                             selectedBottomTab = BottomTab.CATEGORY,
                             onHeaderBottonClicked = {},
+                            onFabAddBottonClicked = {
+                                viewModel.showAddCategoryDialog()
+                            },
                         ) {
 
                             val distinctCategories = categories.distinctBy { it.id }
+                                .sortedByDescending { it.id }
                             LazyColumn(
                                 modifier = Modifier
                                     .weight(1f)
@@ -126,12 +130,9 @@ fun CategoryScreen(
                                         onEditClick = {
                                             // کلیک روی سه نقطه -> باز شدن CategoryDialog
                                             viewModel.showEditCategoryDialog(category)
+
                                         },
-                                        onDeleteClick = {
-                                            // این بخش در صورت نیاز نگه داشته شده است
-                                            categoryToDelete = category
-                                            showDeleteConfirmDialog = true
-                                        })
+                                    )
                                 }
                             }
 

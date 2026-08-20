@@ -61,7 +61,6 @@ fun AboutScreen(
         title = "درباره ما",
         subtitle = "",
         selectedBottomTab = BottomTab.ABOUT,
-        onHeaderBottonClicked = {},
     ) {
 
         Column(

@@ -23,7 +23,7 @@ interface ContentDAO {
     suspend fun insertAll(contents: List<Content>)
 
     @Query("DELETE FROM table_name_content WHERE categoryId = :categoryId")
-    suspend fun deleteByCategoryId(categoryId: String)
+    suspend fun deleteByCategoryId(categoryId: Int)
 
     @Update
     suspend fun update(content: Content)
@@ -32,13 +32,13 @@ interface ContentDAO {
     suspend fun delete(content: Content)
 
     @Query("DELETE FROM table_name_content WHERE id = :contentId")
-    suspend fun deleteById(contentId: String)
+    suspend fun deleteById(contentId: Int)
 
     @Query("SELECT * FROM table_name_content WHERE categoryId = :categoryId ORDER BY idContent DESC")
-    suspend fun getByCategoryId(categoryId: String): List<Content>
+    suspend fun getByCategoryId(categoryId: Int): List<Content>
 
     @Query("SELECT * FROM table_name_content WHERE id = :contentId")
-    suspend fun getById(contentId: String): Content?
+    suspend fun getById(contentId: Int): Content?
 
     @Query(
         """

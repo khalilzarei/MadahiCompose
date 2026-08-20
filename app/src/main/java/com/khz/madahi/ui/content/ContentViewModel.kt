@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.ContentRepository
+import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
 import com.khz.madahi.utils.Result
@@ -57,7 +58,7 @@ class ContentViewModel(
     private fun loadContentsFromDatabase() {
         viewModelScope.launch {
             val categoryId = category?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
             // ✅ خواندن از دیتابیس محلی
             val cached = appDatabase.contentDAO()
@@ -77,9 +78,9 @@ class ContentViewModel(
     private fun syncWithServer() {
         viewModelScope.launch {
             val categoryId = category?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
             when (val result = contentRepository.getContents(
                 categoryId,
@@ -172,9 +173,9 @@ class ContentViewModel(
             val answer = _dialogAnswer.value.trim()
             val contentText = _dialogContent.value.trim()
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
             val categoryId = category?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
             if (subject.isEmpty()) {
                 _uiState.value = ContentUiState.Error("لطفاً عنوان را وارد کنید")
@@ -193,7 +194,7 @@ class ContentViewModel(
             val tempContent = Content(
                 idContent = 0,
                 id = System.currentTimeMillis()
-                    .toString(),
+                    .toInt(),
                 categoryId = categoryId,
                 userId = userId,
                 answer = answer,
@@ -280,8 +281,12 @@ class ContentViewModel(
             // ✅ حذف از دیتابیس محلی
             appDatabase.contentDAO()
                 .delete(content)
-
-            when (val result = contentRepository.deleteContent(content.id)) {
+            val userId = preferencesManager.user?.id
+                    ?: GUEST_USER_ID
+            when (val result = contentRepository.deleteContent(
+                userId,
+                content.id
+            )) {
                 is Result.Success -> {
                     refresh()
                 }

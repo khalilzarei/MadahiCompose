@@ -1,0 +1,36 @@
+// data/remote/api/AuthInterceptor.kt
+package com.khz.madahi.data.remote.api
+
+import com.khz.madahi.helper.extention.logD
+import okhttp3.Interceptor
+import okhttp3.Response
+
+/**
+ * هدر Authorization را به همه درخواست‌ها اضافه می‌کند:
+ * Authorization: Bearer <token>
+ *
+ * سرور امن (new_api) کاربر را از روی همین توکن می‌شناسد،
+ * نه از user_id داخل بدنه.
+ */
+class AuthInterceptor(
+    private val tokenProvider: () -> String?
+) : Interceptor {
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val token = tokenProvider()
+        val request = if (token.isNullOrEmpty()) {
+            chain.request()
+        } else {
+            val header = "Bearer $token"
+            logD("intercept $header")
+            chain.request()
+                .newBuilder()
+                .header(
+                    "Authorization",
+                    header
+                )
+                .build()
+        }
+        return chain.proceed(request)
+    }
+}

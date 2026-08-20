@@ -20,36 +20,49 @@ class PreferencesManager(private val context: Context) {
             IS_LOGGED_IN,
             false
         )
-        set(value) = prefs.edit()
-            .putBoolean(
+        set(value) = prefs.edit {
+            putBoolean(
                 IS_LOGGED_IN,
                 value
             )
-            .apply()
+        }
 
     var isFirstTimeLaunch: Boolean
         get() = prefs.getBoolean(
             IS_FIRST_TIME_LAUNCH,
             true
         )
-        set(value) = prefs.edit()
-            .putBoolean(
+        set(value) = prefs.edit {
+            putBoolean(
                 IS_FIRST_TIME_LAUNCH,
                 value
             )
-            .apply()
+        }
 
     var isNightMode: Boolean
         get() = prefs.getBoolean(
             IS_NIGHT_MODE,
             true
         )
-        set(value) = prefs.edit()
-            .putBoolean(
+        set(value) = prefs.edit {
+            putBoolean(
                 IS_NIGHT_MODE,
                 value
             )
-            .apply()
+        }
+
+    // ✅ توکن احراز هویت (سرور امن)
+    var token: String?
+        get() = prefs.getString(
+            KEY_TOKEN,
+            null
+        )
+        set(value) = prefs.edit {
+            if (value == null) remove(KEY_TOKEN) else putString(
+                KEY_TOKEN,
+                value
+            )
+        }
 
     var user: User?
         get() {
@@ -69,12 +82,12 @@ class PreferencesManager(private val context: Context) {
         }
         set(value) {
             val json = Gson().toJson(value)
-            prefs.edit()
-                .putString(
+            prefs.edit {
+                putString(
                     USER_KEY,
                     json
                 )
-                .apply()
+            }
         }
 
     var font: String
@@ -83,12 +96,12 @@ class PreferencesManager(private val context: Context) {
             DEFAULT_FONT
         )
                 ?: DEFAULT_FONT
-        set(value) = prefs.edit()
-            .putString(
+        set(value) = prefs.edit {
+            putString(
                 KEY_FONT,
                 value
             )
-            .apply()
+        }
 
     var fontSize: Int
         get() = prefs.getInt(
@@ -102,7 +115,7 @@ class PreferencesManager(private val context: Context) {
             )
         }
 
-    // ✅ اندازه فونت برای نمایش محتوا (ذخیره به صورت Float)
+    // اندازه فونت برای نمایش محتوا (Float)
     var contentFontSize: Float
         get() = prefs.getFloat(
             KEY_CONTENT_FONT_SIZE,
@@ -116,9 +129,15 @@ class PreferencesManager(private val context: Context) {
         }
 
     // ============ Methods ============
+    /**
+     * خروج از حساب — فقط اطلاعات نشست پاک می‌شود
+     * (تم، فونت و تنظیمات دست نمی‌خورد)
+     */
     fun clearSession() {
         prefs.edit {
-            clear()
+            remove(IS_LOGGED_IN)
+            remove(USER_KEY)
+            remove(KEY_TOKEN)
         }
     }
 
@@ -128,9 +147,10 @@ class PreferencesManager(private val context: Context) {
         private const val IS_FIRST_TIME_LAUNCH = "is_first_time"
         private const val IS_NIGHT_MODE = "is_night_mode"
         private const val IS_LOGGED_IN = "is_logged_in"
+        private const val KEY_TOKEN = "token_key"          // ✅ جدید
         private const val KEY_FONT = "font_key"
         private const val KEY_FONT_SIZE = "font_size_key"
-        private const val KEY_CONTENT_FONT_SIZE = "content_font_size_key"  // ✅ جدید
+        private const val KEY_CONTENT_FONT_SIZE = "content_font_size_key"
         private const val USER_KEY = "user_key"
         private const val DEFAULT_FONT = "vazir.ttf"
         private const val DEFAULT_FONT_SIZE = 16

@@ -17,7 +17,7 @@ class CategoryRepository(
     }
 
     // ============ Get Categories (suspend) ============
-    suspend fun getCategories(userId: String): Result<List<Category>> {
+    suspend fun getCategories(userId: Int): Result<List<Category>> {
         return try {
             Log.d(
                 TAG,
@@ -80,10 +80,11 @@ class CategoryRepository(
 
     // ============ Add Category ============
     suspend fun addCategory(
-        userId: String,
+        userId: Int,
         title: String,
         description: String
     ): Result<Category> {
+
         return try {
             Log.d(
                 TAG,
@@ -156,8 +157,7 @@ class CategoryRepository(
             )
 
             val response = apiService.updateCategory(
-                category.userId
-                        ?: "0",
+                category.userId,
                 category.id,
                 category.title,
                 category.description
@@ -199,8 +199,8 @@ class CategoryRepository(
 
     // ============ Delete Category ============
     suspend fun deleteCategory(
-        userId: String,
-        categoryId: String
+        userId: Int,
+        categoryId: Int
     ): Result<Boolean> {
         return try {
             Log.d(

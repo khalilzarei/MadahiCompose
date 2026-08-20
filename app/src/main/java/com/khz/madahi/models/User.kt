@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 //@Entity(tableName = Constants.TABLE_USER)
 class User(
-    @SerializedName("id") var id: String? = null,
+    @SerializedName("id") var id: Int? = null,
     @SerializedName("full_name") var fullName: String? = null,
     @SerializedName("user_name") var userName: String? = null,
     @SerializedName("email") var email: String? = null,

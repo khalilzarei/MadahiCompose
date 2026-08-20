@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.ContentRepository
+import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.helper.extention.logD
 import com.khz.madahi.helper.extention.logE
 import com.khz.madahi.models.Content
@@ -29,13 +30,12 @@ class ContentDetailViewModel(
     private val _favorite = MutableStateFlow<Favorite?>(null)
     val favorite: StateFlow<Favorite?> = _favorite.asStateFlow()
 
-
     fun loadFavoriteStatus(content: Content) {
         viewModelScope.launch {
             logD("loadFavoriteStatus: contentId=${content.id}")
 
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
             logD("loadFavoriteStatus: userId=$userId")
 
             // ✅ بررسی در دیتابیس محلی
@@ -130,7 +130,7 @@ class ContentDetailViewModel(
             logD("addToFavorites: contentId=${content.id}")
 
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
             // ✅ بررسی کن که قبلاً در دیتابیس وجود ندارد
             val existingFavorite = appDatabase.favoriteDAO()
@@ -182,7 +182,7 @@ class ContentDetailViewModel(
                             idFavorite = 0,
                             contentId = content.id,
                             id = System.currentTimeMillis()
-                                .toString(),
+                                .toInt(),
                             userId = userId,
                             createdAt = null,
                             updateAt = null
@@ -225,7 +225,7 @@ class ContentDetailViewModel(
             logD("removeFromFavorites: contentId=${content.id}")
 
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
             _favoriteState.value = FavoriteState.Loading
 
@@ -276,7 +276,7 @@ class ContentDetailViewModel(
             logD("toggleFavorite: contentId=${content.id}")
 
             val userId = preferencesManager.user?.id
-                    ?: "0"
+                    ?: GUEST_USER_ID
 
             // ✅ وضعیت را به Loading ببر
             _favoriteState.value = FavoriteState.Loading
@@ -309,7 +309,7 @@ class ContentDetailViewModel(
 
                     // ✅ در صورت خطا، وضعیت قبلی را بازیابی کن
                     val userId = preferencesManager.user?.id
-                            ?: "0"
+                            ?: GUEST_USER_ID
                     val existingFavorite = appDatabase.favoriteDAO()
                         .getFavorite(
                             content.id,

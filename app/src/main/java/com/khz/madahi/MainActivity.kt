@@ -70,6 +70,25 @@ class MainActivity : ComponentActivity() {
     // Fullscreen
     // =========================================================
 
+    // =====================================================
+// Full Screen — بعد از هر بار برگشت focus، دوباره مخفی کن
+// (دیالوگ‌ها، کیبورد، خروج از اپ و ...)
+// =====================================================
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            WindowInsetsControllerCompat(
+                window,
+                window.decorView
+            ).apply {
+                hide(
+                    WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars()
+                )
+                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+    }
+
     private fun setupFullscreen() {
 
         /*

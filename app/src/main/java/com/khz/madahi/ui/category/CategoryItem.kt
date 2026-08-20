@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ViewHeadline
@@ -33,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.models.Category
 import com.khz.madahi.ui.components.GlassCard3D
 import com.khz.madahi.ui.theme.LocalMadahiColors
@@ -45,13 +45,11 @@ fun CategoryItem(
     category: Category,
     onClick: () -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
 //    val colors = getDangerDialogColors()
 
     val colors = LocalMadahiColors.current
-    val canManage = category.userId != "0"
+    val canManage = category.userId != GUEST_USER_ID
     val shape = RoundedCornerShape(10.dp)
 
     // وضعیت نمایش یا عدم نمایش منوی منوی سه نقطه
@@ -125,14 +123,14 @@ fun CategoryItemPreview() {
     MadahiThemeGreen(darkTheme = true) {
         CategoryItem(
             category = Category(
-                id = "1",
-                userId = "1",
+                id = 1,
+                userId = 1,
                 title = "علمدار ",
                 description = "حاج محمود کریمی"
             ),
             onClick = {},
             onEditClick = {},
-            onDeleteClick = {})
+        )
     }
 }
 
@@ -145,14 +143,14 @@ fun CategoryItemDefaultPreview() {
     MadahiThemeGreen(darkTheme = false) {
         CategoryItem(
             category = Category(
-                id = "1",
-                userId = "1",
+                id = 1,
+                userId = 1,
                 title = "ای اهل حرم میرو و علمدار نیامد",
                 description = "حاج محمود کریمی"
             ),
             onClick = {},
             onEditClick = {},
-            onDeleteClick = {})
+        )
     }
 }
 

@@ -22,7 +22,8 @@ fun BaseScreen(
     bottomBarActions: BottomBarActions,
     title: String,
     subtitle: String = "",
-    onHeaderBottonClicked: () -> Unit,
+    onHeaderBottonClicked: () -> Unit = {},
+    onFabAddBottonClicked: () -> Unit = {},
     selectedBottomTab: BottomTab,
     content: @Composable () -> Unit
 ) {
@@ -47,6 +48,7 @@ fun BaseScreen(
             BottomBarView(
                 selectedTab = selectedBottomTab,
                 actions = bottomBarActions,
+                onFabAddBottonClicked = onFabAddBottonClicked,
             )
         }
     }
@@ -62,6 +64,7 @@ fun BaseScreenPreview() {
             subtitle = "",
             selectedBottomTab = BottomTab.ABOUT,
             onHeaderBottonClicked = {},
+            onFabAddBottonClicked = {},
         ) {
             Column {
                 Text("Test")

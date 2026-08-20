@@ -2,10 +2,7 @@
 
 package com.khz.madahi.ui.common
 
-import android.R.attr.scaleX
-import android.R.attr.scaleY
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -93,6 +89,7 @@ data class BottomBarActions(
 fun BottomBarView(
     selectedTab: BottomTab = BottomTab.CATEGORY,
     actions: BottomBarActions = BottomBarActions(),
+    onFabAddBottonClicked: () -> Unit,
 ) {
 
     GlassCard3D(
@@ -132,7 +129,9 @@ fun BottomBarView(
                 modifier = Modifier.weight(1f)
             )
 
-            BottomBarFab { }
+            BottomBarFab {
+                onFabAddBottonClicked()
+            }
 
             BottomBarItem(
                 icon = Icons.Default.Settings,
@@ -332,7 +331,6 @@ private fun BottomBarFab(
                 )
         )
 
-
         /*
          * =====================================================
          * بدنه‌ی اصلی Glass 3D
@@ -402,7 +400,6 @@ private fun BottomBarFab(
                     )
             )
 
-
             /*
              * =================================================
              * نور نقطه‌ای شیشه
@@ -428,7 +425,6 @@ private fun BottomBarFab(
                     )
             )
 
-
             /*
              * =================================================
              * حلقه‌ی طلایی داخلی
@@ -450,7 +446,6 @@ private fun BottomBarFab(
                         shape = CircleShape
                     )
             )
-
 
             /*
              * =================================================
@@ -477,7 +472,6 @@ private fun BottomBarFab(
                         shape = CircleShape
                     )
             )
-
 
             /*
              * =================================================
@@ -510,6 +504,7 @@ fun CategoryBottomBarPreview() {
         BottomBarView(
             selectedTab = BottomTab.CATEGORY,
             actions = BottomBarActions(),
+            onFabAddBottonClicked = {},
         )
     }
 }
@@ -525,6 +520,7 @@ fun CategoryBottomBarPreviewDark() {
         BottomBarView(
             selectedTab = BottomTab.CATEGORY,
             actions = BottomBarActions(),
+            onFabAddBottonClicked = {},
         )
     }
 }

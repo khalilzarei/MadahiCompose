@@ -151,9 +151,9 @@ fun ContentItemNohehPreview() {
         ContentItem(
             content = Content(
                 idContent = 0,
-                id = "1",
-                categoryId = "1",
-                userId = "1",
+                id = 1,
+                categoryId = 1,
+                userId = 1,
                 answer = "مجموعه نوحه‌های مناسبتی",
                 content = "content",
                 subject = "نوحه‌های محرم",
@@ -172,9 +172,9 @@ fun ContentItemRoozehPreview() {
         ContentItem(
             content = Content(
                 idContent = 0,
-                id = "2",
-                categoryId = "1",
-                userId = "1",
+                id = 2,
+                categoryId = 1,
+                userId = 1,
                 answer = "مجموعه روضه‌های مناسبتی",
                 content = "content",
                 subject = "روضه‌های محرم",

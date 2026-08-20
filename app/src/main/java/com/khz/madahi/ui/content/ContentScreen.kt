@@ -39,7 +39,7 @@ import com.khz.madahi.ui.components.TopHeader
 fun ContentScreen(
     category: Category?,
     onNavigateBack: () -> Unit,
-    onNavigateToContentDetail: (String) -> Unit
+    onNavigateToContentDetail: (Int) -> Unit
 ) {
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }

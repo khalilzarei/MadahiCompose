@@ -21,8 +21,8 @@ class ContentRepository(
 
     // ============ Get Contents ============
     suspend fun getContents(
-        categoryId: String,
-        userId: String
+        categoryId: Int,
+        userId: Int
     ): Result<List<Content>> {
         return try {
             Log.d(
@@ -40,7 +40,7 @@ class ContentRepository(
                 "getContents: response=$response"
             )
 
-            if (response.error == true) {
+            if (response.error) {
                 val errorMsg = response.errorMsg
                         ?: "خطا در دریافت محتواها"
                 Log.e(
@@ -193,14 +193,20 @@ class ContentRepository(
     }
 
     // ============ Delete Content ============
-    suspend fun deleteContent(contentId: String): Result<Boolean> {
+    suspend fun deleteContent(
+        userId: Int,
+        contentId: Int
+    ): Result<Boolean> {
         return try {
             Log.d(
                 TAG,
                 "deleteContent: contentId=$contentId"
             )
 
-            val response = apiService.deleteContent(contentId)
+            val response = apiService.deleteContent(
+                userId,
+                contentId
+            )
 
             Log.d(
                 TAG,
@@ -237,8 +243,8 @@ class ContentRepository(
 
     // ============ Add Favorite (suspend - بدون Call) ============
     suspend fun addFavorite(
-        userId: String,
-        contentId: String
+        userId: Int,
+        contentId: Int
     ): Result<Favorite> {
         return try {
             Log.d(
@@ -294,8 +300,8 @@ class ContentRepository(
 
     // ============ Remove Favorite ============
     suspend fun removeFavorite(
-        userId: String,
-        contentId: String
+        userId: Int,
+        contentId: Int
     ): Result<Boolean> {
         return try {
             Log.d(
@@ -363,8 +369,8 @@ class ContentRepository(
 
     // ============ Toggle Favorite (اضافه/حذف) ============
     suspend fun toggleFavorite(
-        userId: String,
-        contentId: String
+        userId: Int,
+        contentId: Int
     ): Result<Favorite?> {
         return try {
             Log.d(

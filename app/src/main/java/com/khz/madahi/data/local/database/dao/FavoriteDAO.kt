@@ -25,11 +25,11 @@ interface FavoriteDAO {
     suspend fun delete(favorite: Favorite)
 
     @Query("DELETE FROM table_name_favorite WHERE contentId = :contentId")
-    suspend fun deleteByContentId(contentId: String)
+    suspend fun deleteByContentId(contentId: Int)
 
     @Query("SELECT * FROM table_name_favorite WHERE contentId = :contentId AND userId = :userId")
     suspend fun getFavorite(
-        contentId: String,
-        userId: String
+        contentId: Int,
+        userId: Int
     ): Favorite?
 }

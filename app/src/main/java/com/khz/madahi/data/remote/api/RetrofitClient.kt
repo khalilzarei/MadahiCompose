@@ -1,56 +1,52 @@
 // data/remote/api/RetrofitClient.kt
 package com.khz.madahi.data.remote.api
 
+import android.content.Context
 import com.google.gson.GsonBuilder
 import com.khz.madahi.BuildConfig
+import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.helper.BASE_URL
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/**
- * ✅ بهینه‌سازی نسبت به نسخه‌ی قبلی:
- *  - قبلاً `client` هر بار که apiService خوانده می‌شد از نو ساخته می‌شد
- *    (چون داخل getter بدون cache بود)، در حالی که فقط `retrofit` کش می‌شد.
- *    این باعث ساخته‌شدن یک OkHttpClient جدید (با connection pool و
- *    thread pool مخصوص خودش) در هر فراخوانی می‌شد که هم اتلاف منابع بود
- *    و هم عملاً استفاده نمی‌شد چون retrofit از قبل ساخته شده بود.
- *  - الان هم `client` و هم `retrofit` به‌صورت `by lazy` فقط یک بار ساخته
- *    می‌شوند (Thread-safe به‌صورت پیش‌فرض در Kotlin).
- *  - کدهای مرده و کامنت‌شده‌ی نسخه‌ی قبلی حذف شدند.
- */
 object RetrofitClient {
+
+    private lateinit var appContext: Context
+
+    /** حتماً در App.onCreate صدا زده شود */
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
 
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(
-                2,
-                TimeUnit.MINUTES
+                20,
+                TimeUnit.SECONDS
             )
             .readTimeout(
-                2,
-                TimeUnit.MINUTES
+                30,
+                TimeUnit.SECONDS
             )
             .writeTimeout(
-                2,
-                TimeUnit.MINUTES
+                30,
+                TimeUnit.SECONDS
             )
             .retryOnConnectionFailure(true)
-            .addInterceptor { chain: Interceptor.Chain ->
-                val original = chain.request()
-                val request = original.newBuilder()
-                    .method(
-                        original.method,
-                        original.body
-                    )
-                    .build()
-                chain.proceed(request)
-            }
+            // ✅ افزودن خودکار هدر توکن به همه درخواست‌ها
+            .addInterceptor(
+                AuthInterceptor {
+                    if (::appContext.isInitialized) {
+                        PreferencesManager(appContext).token
+                    } else {
+                        null
+                    }
+                })
             .apply {
-                // ✅ لاگ فقط در نسخه‌ی Debug فعال است تا در ریلیز نشتی اطلاعات نداشته باشیم
+                // ✅ لاگ فقط در نسخه‌ی Debug
                 if (BuildConfig.DEBUG) {
                     val logging = HttpLoggingInterceptor().apply {
                         level = HttpLoggingInterceptor.Level.BODY
@@ -72,7 +68,7 @@ object RetrofitClient {
             .build()
     }
 
-    // ✅ apiService هم فقط یک بار ساخته و کش می‌شود
+    // ✅ apiService فقط یک بار ساخته و کش می‌شود
     val apiService: APIService by lazy {
         retrofit.create(APIService::class.java)
     }

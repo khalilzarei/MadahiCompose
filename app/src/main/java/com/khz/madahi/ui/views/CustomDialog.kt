@@ -1,28 +1,15 @@
+// ui/views/CustomDialog.kt
 package com.khz.madahi.ui.views
 
-
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.SystemUpdate
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -30,12 +17,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.khz.madahi.ui.common.DialogFullscreenWindow
+import com.khz.madahi.ui.components.GlassCard3D
+import com.khz.madahi.ui.components.ThreeDButton
+import com.khz.madahi.ui.theme.LocalMadahiColors
+import com.khz.madahi.ui.theme.MadahiTheme
+import com.khz.madahi.ui.theme.gold
+import com.khz.madahi.ui.theme.textMuted
+import com.khz.madahi.ui.theme.textPrimary
+
+// ============================================================
+// دیالوگ عمومی (پیام/خطا) — طراحی شیشه‌ای و سه‌بعدی
+// امضا و رفتار دقیقاً مثل نسخه قبلی است
+// ============================================================
 
 @Composable
 fun CustomDialog(
@@ -44,7 +46,7 @@ fun CustomDialog(
     message: String = "نسخه جدید اپلیکیشن آماده است! لطفاً اپ را آپدیت کنید.",
     confirmText: String = "بروزرسانی",
     dismissText: String = "بعداً",
-    icon: ImageVector = Icons.Default.SystemUpdate,
+    icon: ImageVector = androidx.compose.material.icons.Icons.Default.SystemUpdate,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     onDismissAction: () -> Unit = {}
@@ -59,93 +61,77 @@ fun CustomDialog(
                 decorFitsSystemWindows = false
             )
         ) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
+            DialogFullscreenWindow()
+
+            val colors = LocalMadahiColors.current
+
+            GlassCard3D(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .wrapContentHeight()
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(16.dp)
-                    )
+                    .fillMaxWidth(0.86f)
+                    .padding(vertical = 24.dp)
             ) {
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(
+                            horizontal = 24.dp,
+                            vertical = 28.dp
+                        ),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // عنوان
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Divider(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                        thickness = 1.dp,
-                        modifier = Modifier.fillMaxWidth()
+                    // ============ آیکون ============
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = colors.gold,
+                        modifier = Modifier.size(52.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(Modifier.height(14.dp))
 
-                    // متن
+                    // ============ عنوان ============
+                    Text(
+                        text = title,
+                        color = colors.textPrimary,
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // ============ پیام ============
                     Text(
                         text = message,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        color = colors.textMuted,
+                        fontSize = 15.sp,
+                        lineHeight = 26.sp,
+                        textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(Modifier.height(26.dp))
 
-                    // دکمه‌ها
-                    Row(
+                    // ============ دکمه‌ها ============
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            8.dp,
-                            Alignment.CenterHorizontally
-                        )
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
                     ) {
-                        Button(
-                            onClick = onConfirm,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Download,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(confirmText)
-                        }
 
-                        OutlinedButton(
-                            onClick = onDismissAction,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(dismissText)
+                        ThreeDButton(
+                            text = confirmText,
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = onConfirm
+                        )
+
+                        // اگر dismissText خالی بود، دکمه دوم نمایش داده نمی‌شود
+                        if (dismissText.isNotEmpty()) {
+                            ThreeDButton(
+                                text = dismissText,
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = onDismissAction
+                            )
                         }
                     }
                 }
@@ -156,13 +142,13 @@ fun CustomDialog(
 
 @Preview(
     name = "Dialog Preview",
-    showBackground = true,
+    showBackground = false,
     widthDp = 400,
     heightDp = 350
 )
 @Composable
 fun CustomDialogPreview() {
-    MaterialTheme {
+    MadahiTheme(darkTheme = true) {
         // ✅ مستقیماً CustomDialog را صدا بزن
         CustomDialog(
             showDialog = true,
@@ -173,7 +159,6 @@ fun CustomDialogPreview() {
             icon = Icons.Default.SystemUpdate,
             onDismiss = {},
             onConfirm = {},
-            onDismissAction = {}
-        )
+            onDismissAction = {})
     }
 }

@@ -1,3 +1,4 @@
+// models/response/LoginResponse.kt
 package com.khz.madahi.models.response
 
 import com.google.gson.annotations.SerializedName
@@ -6,8 +7,11 @@ import com.khz.madahi.models.Content
 import com.khz.madahi.models.Favorite
 import com.khz.madahi.models.User
 
-// ✅ error دیگر nullable نیست (پیش‌فرض false) - همسان با بقیه Response ها
+// ✅ هماهنگ با سرور امن — فیلد token اضافه شد
 class LoginResponse {
+    @SerializedName("token")
+    var token: String? = null          // ✅ توکن احراز هویت (Bearer)
+
     @SerializedName("user")
     var user: User? = null
 

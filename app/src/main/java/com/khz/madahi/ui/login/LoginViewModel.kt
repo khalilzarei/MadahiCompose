@@ -78,7 +78,8 @@ class LoginViewModel(
                     preferencesManager.user = loginResponse.user
                     preferencesManager.isLoggedIn = true
                     preferencesManager.isFirstTimeLaunch = false
-
+// ✅ ذخیره توکن برای درخواست‌های بعدی
+                    loginResponse.token?.let { preferencesManager.token = it }
                     // ✅ ذخیره دسته‌بندی‌ها در دیتابیس
                     loginResponse.categories?.let { categories ->
                         appDatabase.categoryDAO()

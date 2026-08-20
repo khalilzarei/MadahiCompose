@@ -39,7 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
                             // همه‌ی متدهای DAO الان suspend هستند و باید از
                             // یک CoroutineScope (مثل viewModelScope) فراخوانی شوند
                             // تا روی Dispatchers.IO اجرا شده و از ANR جلوگیری شود.
-                            .fallbackToDestructiveMigration() // ✅ جلوگیری از کرش هنگام تغییر schema بدون migration دستی
+                            .fallbackToDestructiveMigration(false) // ✅ جلوگیری از کرش هنگام تغییر schema بدون migration دستی
                             .build()
                         INSTANCE = instance
                         instance

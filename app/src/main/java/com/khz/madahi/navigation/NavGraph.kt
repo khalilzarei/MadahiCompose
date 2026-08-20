@@ -1,7 +1,6 @@
 // navigation/NavGraph.kt
 package com.khz.madahi.navigation
 
-import android.util.Log.v
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -12,13 +11,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.khz.madahi.data.local.database.AppDatabase
+import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
 import com.khz.madahi.ui.about.AboutScreen
@@ -43,14 +42,14 @@ sealed class Screen(val route: String) {
 
     // ✅ مسیر Content با categoryId
     object ContentScreen : Screen("content/{categoryId}") {
-        fun passCategory(categoryId: String): String {
+        fun passCategory(categoryId: Int): String {
             return "content/$categoryId"
         }
     }
 
     // ✅ مسیر ContentDetail با contentId
     object ContentDetail : Screen("contentDetail/{contentId}") {
-        fun passContent(contentId: String): String {
+        fun passContent(contentId: Int): String {
             return "contentDetail/$contentId"
         }
     }
@@ -174,7 +173,7 @@ fun NavGraph(
                 value = try {
                     true to AppDatabase.getInstance(context)
                         .categoryDAO()
-                        .getById(categoryId)
+                        .getById(categoryId.toInt())
                 } catch (e: Exception) {
                     true to null
                 }
@@ -193,7 +192,6 @@ fun NavGraph(
                     category = category,
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToContentDetail = { contentId ->
-                        // ✅ ارسال contentId
                         navController.navigate(Screen.ContentDetail.passContent(contentId))
                     },
                 )
@@ -206,8 +204,8 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("contentId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val contentId = backStackEntry.arguments?.getString("contentId")
-                    ?: ""
+            val contentId = backStackEntry.arguments?.getString("contentId")?.toInt()
+                    ?: GUEST_USER_ID
 
             val contentLoadState = produceState<Pair<Boolean, Content?>>(
                 initialValue = false to null,
