@@ -1,8 +1,8 @@
 // ui/intro/IntroScreen.kt
 package com.khz.madahi.ui.intro
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,76 +16,80 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.khz.madahi.R
 import com.khz.madahi.data.local.preferences.PreferencesManager
+import com.khz.madahi.ui.components.GlassCard3D
+import com.khz.madahi.ui.components.MadahiBackground
+import com.khz.madahi.ui.theme.LocalMadahiColors
+import com.khz.madahi.ui.theme.MadahiThemeGreen
+import com.khz.madahi.ui.theme.gold
+import com.khz.madahi.ui.theme.primaryDark
+import com.khz.madahi.ui.theme.textMuted
+import com.khz.madahi.ui.theme.textPrimary
 import kotlinx.coroutines.launch
 
-// ============ Data Class ============
+// ============================================================
+// اسلایدهای معرفی — سبک شیشه‌ای و سه‌بعدی
+// امضای ورودی دقیقاً مثل نسخه قبلی است (NavGraph دست نمی‌خورد)
+// ============================================================
+
 data class IntroSlide(
-    val imageRes: Int,
+    val icon: String,        // ایموجی / کاراکتر
     val title: String,
     val description: String
 )
 
-// ============ اسلایدها ============
-val slides = listOf(
+val defaultIntroSlides = listOf(
     IntroSlide(
-        imageRes = R.mipmap.ic_launcher,
+        icon = "📖",
         title = "دفترچه مداحی",
-        description = "ذخیره‌سازی نوحه‌ها و روضه‌ها و دسترسی سریع"
+        description = "ذخیره‌سازی نوحه‌ها و اشعار و دسترسی سریع به آن‌ها"
     ),
     IntroSlide(
-        imageRes = R.mipmap.ic_launcher,
+        icon = "🎙️",
         title = "سفارشی‌سازی",
-        description = "می‌توانید نوحه‌ها و روضه‌های خود را سفارشی کنید و به تعداد دلخواه اضافه کنید"
+        description = "اشعار و دیالوگ‌های خود را بسازید و به تعداد دلخواه اضافه کنید"
     ),
     IntroSlide(
-        imageRes = R.mipmap.ic_launcher,
+        icon = "✨",
+        title = "طراحی زیبا",
+        description = "رابط کاربری شیشه‌ای و سه‌بعدی با تم سبز و طلایی"
+    ),
+    IntroSlide(
+        icon = "🆓",
         title = "کاملاً رایگان",
         description = "تمام امکانات این اپلیکیشن رایگان می‌باشد"
-    ),
-    IntroSlide(
-        imageRes = R.mipmap.ic_launcher,
-        title = "پیشنهادات",
-        description = "در صورت داشتن پیشنهاد می‌توانید با برنامه‌نویس اپ تماس بگیرید\n09362371808"
     )
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IntroScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToCategory: () -> Unit
 ) {
+    val colors = LocalMadahiColors.current
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     val coroutineScope = rememberCoroutineScope()
 
     val pagerState = rememberPagerState(
         initialPage = 0,
-        pageCount = { slides.size })
+        pageCount = { defaultIntroSlides.size })
 
-    val isLastPage = pagerState.currentPage == slides.size - 1
+    val isLastPage = pagerState.currentPage == defaultIntroSlides.size - 1
 
     fun onFinishIntro() {
         preferencesManager.isFirstTimeLaunch = false
@@ -96,145 +100,161 @@ fun IntroScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // ============ ViewPager ============
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f)
-        ) { page ->
-            IntroSlideContent(slide = slides[page])
-        }
+    MadahiBackground {
 
-        // ============ خط جداکننده ============
-        Divider(
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-            thickness = 1.dp,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        )
-
-        // ============ دکمه‌ها + Dots ============
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(26.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // دکمه Skip (چپ)
-            TextButton(
-                onClick = { onFinishIntro() }) {
-                Text(
-                    "گذشتن",
-                    fontSize = 16.sp
-                )
+
+            // ============ اسلایدها ============
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f)
+            ) { page ->
+
+                val slide = defaultIntroSlides[page]
+
+                GlassCard3D {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        // آیکون در دایره سه‌بعدی (هماهنگ با Splash جدید)
+                        Box(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .shadow(
+                                    26.dp,
+                                    CircleShape
+                                )
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(
+                                            colors.primary,
+                                            colors.primaryDark
+                                        )
+                                    ),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = slide.icon,
+                                fontSize = 64.sp
+                            )
+                        }
+
+                        Spacer(Modifier.height(36.dp))
+
+                        Text(
+                            text = slide.title,
+                            color = colors.textPrimary,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(14.dp))
+
+                        Text(
+                            text = slide.description,
+                            color = colors.textMuted,
+                            fontSize = 15.sp,
+                            lineHeight = 28.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
 
-            // ============ Dots Indicator (وسط) ============
+            // ============ نقطه‌های راهنما ============
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                repeat(slides.size) { index ->
+                repeat(defaultIntroSlides.size) { index ->
                     val isSelected = pagerState.currentPage == index
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(if (isSelected) 14.dp else 8.dp)
+                            .padding(horizontal = 5.dp)
+                            .size(if (isSelected) 12.dp else 8.dp)
+                            .shadow(
+                                elevation = if (isSelected) 8.dp else 0.dp,
+                                shape = CircleShape
+                            )
                             .background(
-                                color = if (isSelected) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                },
+                                color = if (isSelected) colors.gold else colors.textMuted.copy(alpha = 0.4f),
                                 shape = CircleShape
                             )
                     )
                 }
             }
 
-            // دکمه Next / Start (راست)
-            Button(
-                onClick = {
-                    if (isLastPage) {
-                        onFinishIntro()
-                    } else {
-                        coroutineScope.launch {
-                            pagerState.scrollToPage(pagerState.currentPage + 1)
-                        }
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    text = if (isLastPage) "شروع" else "بعدی",
-                    fontSize = 16.sp
-                )
+            Spacer(Modifier.height(22.dp))
+
+            // ============ دکمه‌ها — نوشته ساده و سبک (مناسب اینترو) ============
+            GlassCard3D {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    // ===== گذشتن — متن ساده =====
+                    Text(
+                        text = "گذشتن",
+                        color = colors.textMuted,
+                        fontSize = 15.sp,
+                        modifier = Modifier
+                            .clickable { onFinishIntro() }
+                            .padding(
+                                vertical = 10.dp,
+                                horizontal = 12.dp
+                            ))
+
+                    // ===== بعدی / شروع — نوشته طلایی با فلش =====
+                    Text(
+                        text = if (isLastPage) "شروع" else "بعدی",
+                        color = colors.gold,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clickable {
+                                if (isLastPage) {
+                                    onFinishIntro()
+                                } else {
+                                    coroutineScope.launch {
+                                        pagerState.scrollToPage(pagerState.currentPage + 1)
+                                    }
+                                }
+                            }
+                            .padding(
+                                vertical = 10.dp,
+                                horizontal = 12.dp
+                            ))
+                }
             }
+
         }
     }
 }
 
-// ============ محتوای هر اسلاید ============
+@Preview(showBackground = false)
 @Composable
-fun IntroSlideContent(slide: IntroSlide) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Card(
-            modifier = Modifier.size(260.dp),
-            shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant  // ✅ از تم
-            ),
-            elevation = CardDefaults.cardElevation(8.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher),
-                contentDescription = slide.title,
-                modifier = Modifier.fillMaxSize(),
-                alignment = Alignment.Center,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = slide.title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary,  // ✅ از تم
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = slide.description,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground,  // ✅ از تم
-            textAlign = TextAlign.Center
-        )
+private fun IntroScreenPreview() {
+    MadahiThemeGreen(darkTheme = true) {
+        IntroScreen(
+            onNavigateToLogin = {},
+            onNavigateToCategory = {})
     }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun IntroScreenPreview() {
-    IntroScreen(
-        {},
-        {},
-    )
 }

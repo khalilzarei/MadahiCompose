@@ -23,12 +23,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,7 +57,10 @@ import com.khz.madahi.ui.components.BaseScreen
 import com.khz.madahi.ui.components.GlassCard3D
 import com.khz.madahi.ui.components.Mini3DButton
 import com.khz.madahi.ui.theme.FontCatalog
+import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
+import com.khz.madahi.ui.theme.gold
+import com.khz.madahi.ui.theme.textPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +73,7 @@ fun SettingScreen(
     var isDarkMode by remember {
         mutableStateOf(preferencesManager.isNightMode)
     }
-
+    val colors = LocalMadahiColors.current
     BaseScreen(
         bottomBarActions = bottomBarActions,
         title = "تنظیمات",
@@ -114,7 +115,7 @@ fun SettingScreen(
                                         Icons.Default.LightMode
                                     },
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = if (isDarkMode) Color.Black else colors.gold,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -140,11 +141,11 @@ fun SettingScreen(
                                     (context as? ComponentActivity)?.recreate()
                                 },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    checkedTrackColor = colors.gold,
+                                    checkedThumbColor = colors.textPrimary
                                 )
                             )
+
                         }
                     }
 
@@ -171,12 +172,16 @@ fun SettingScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.TextFields,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
+                                Text(
+                                    text = "✒️",
+                                    fontSize = 22.sp
                                 )
+//                                Icon(
+//                                    imageVector = Icons.Default.TextFields,
+//                                    contentDescription = null,
+//                                    tint = MaterialTheme.colorScheme.primary,
+//                                    modifier = Modifier.size(24.dp)
+//                                )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = "فونت",
@@ -299,11 +304,16 @@ fun SettingScreen(
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.FormatSize,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
+//                                Icon(
+//                                    imageVector = Icons.Default.FormatSize,
+//                                    contentDescription = null,
+//                                    tint = MaterialTheme.colorScheme.primary,
+//                                    modifier = Modifier.size(24.dp)
+//                                )
+
+                                Text(
+                                    text = "🔠",
+                                    fontSize = 22.sp
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
@@ -372,7 +382,7 @@ fun SettingScreen(
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = colors.gold,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -386,7 +396,7 @@ fun SettingScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBackIosNew,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = colors.gold,
                             )
                         }
                     }
@@ -411,7 +421,7 @@ fun SettingScreen(
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = colors.gold,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -425,7 +435,7 @@ fun SettingScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBackIosNew,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = colors.gold,
                             )
                         }
                     }

@@ -42,7 +42,7 @@ class PreferencesManager(private val context: Context) {
     var isNightMode: Boolean
         get() = prefs.getBoolean(
             IS_NIGHT_MODE,
-            false
+            true
         )
         set(value) = prefs.edit()
             .putBoolean(

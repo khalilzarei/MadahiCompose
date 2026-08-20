@@ -42,13 +42,13 @@ fun Delete3DButton(
         enabled = enabled,
         onClick = onClick
     ) {
-        Icon(
-            Icons.Outlined.Delete,
-            null,
-            tint = c.textPrimary,
-            modifier = Modifier.size(23.dp)
-        )
-        Spacer(Modifier.width(9.dp))
+//        Icon(
+//            Icons.Outlined.Delete,
+//            null,
+//            tint = c.textPrimary,
+//            modifier = Modifier.size(23.dp)
+//        )
+//        Spacer(Modifier.width(9.dp))
         Text(
             text,
             color = c.textPrimary,

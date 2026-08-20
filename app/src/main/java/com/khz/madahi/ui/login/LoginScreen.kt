@@ -1,30 +1,16 @@
 // ui/login/LoginScreen.kt
 package com.khz.madahi.ui.login
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -36,7 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,18 +33,38 @@ import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.api.RetrofitClient
 import com.khz.madahi.data.remote.repository.AuthRepository
-import com.khz.madahi.ui.views.CustomDialog
+import com.khz.madahi.ui.components.CircularImage
+import com.khz.madahi.ui.components.GlassCard
+import com.khz.madahi.ui.components.GlassTextField
+import com.khz.madahi.ui.components.MadahiBackground
+import com.khz.madahi.ui.components.ThreeDButton
+import com.khz.madahi.ui.theme.LocalMadahiColors
+import com.khz.madahi.ui.theme.MadahiThemeGreen
+import com.khz.madahi.ui.theme.delete
+import com.khz.madahi.ui.theme.gold
+import com.khz.madahi.ui.theme.textMuted
+import com.khz.madahi.ui.theme.textPrimary
+import com.khz.madahi.ui.theme.textSecondary
 import com.khz.madahi.utils.NetworkChecker
+
+// ============================================================
+// صفحه ورود / ثبت‌نام — سبک شیشه‌ای و سه‌بعدی
+// ------------------------------------------------------------
+// ساختار دو لایه:
+//   LoginScreen       → stateful (ViewModel، جمع‌آوری state)
+//   LoginScreenContent → stateless (فقط UI — برای Preview امن است)
+// امضای ورودی دقیقاً مثل نسخه قبلی است (NavGraph دست نمی‌خورد)
+// ============================================================
 
 @Composable
 fun LoginScreen(
     onNavigateToCategory: () -> Unit
 ) {
     val context = LocalContext.current
-    var showErrorDialog by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
 
-    // ============ ViewModel ============
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // ============ ViewModel (همان نسخه قبلی — بدون تغییر) ============
     val viewModelFactory = remember {
         LoginViewModelFactory(
             preferencesManager = PreferencesManager(context),
@@ -67,9 +74,7 @@ fun LoginScreen(
         )
     }
 
-    val viewModel: LoginViewModel = viewModel(
-        factory = viewModelFactory
-    )
+    val viewModel: LoginViewModel = viewModel(factory = viewModelFactory)
 
     // ============ State ============
     val uiState by viewModel.uiState.collectAsState()
@@ -80,190 +85,201 @@ fun LoginScreen(
     // ============ Effects ============
     LaunchedEffect(uiState) {
         when (uiState) {
-            is LoginUiState.Success -> {
-                onNavigateToCategory()
-            }
-
-            is LoginUiState.Error   -> {
-                errorMessage = (uiState as LoginUiState.Error).message
-                showErrorDialog = true
-            }
-
+            is LoginUiState.Success -> onNavigateToCategory()
+            is LoginUiState.Error   -> errorMessage = (uiState as LoginUiState.Error).message
             else                    -> Unit
         }
     }
 
-    // ============ Dialog Error ============
-    CustomDialog(
-        showDialog = showErrorDialog,
-        title = "خطا",
-        message = errorMessage,
-        confirmText = "باشه",
-        dismissText = "",
-        icon = Icons.Default.Person,
-        onDismiss = { showErrorDialog = false },
-        onConfirm = {
-            showErrorDialog = false
-        },
-        onDismissAction = {
-            showErrorDialog = false
-        })
+    // ============ UI (stateless) ============
+    LoginScreenContent(
+        isLoginMode = isLoginMode,
+        fullName = fullName,
+        mobile = mobile,
+        isLoading = uiState is LoginUiState.Loading,
+        errorMessage = errorMessage,
+        onFullNameChange = viewModel::updateFullName,
+        onMobileChange = viewModel::updateMobile,
+        onToggleMode = viewModel::toggleMode,
+        onSubmit = viewModel::submit
+    )
+}
 
-    // ============ UI ============
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Logo
-        Card(
-            modifier = Modifier.size(250.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+// ============================================================
+// UI خالص — بدون ViewModel (برای Preview و تست)
+// ============================================================
+
+@Composable
+fun LoginScreenContent(
+    isLoginMode: Boolean,               // true = ورود ، false = ثبت‌نام
+    fullName: String,
+    mobile: String,
+    isLoading: Boolean,
+    errorMessage: String?,
+    onFullNameChange: (String) -> Unit,
+    onMobileChange: (String) -> Unit,
+    onToggleMode: () -> Unit,
+    onSubmit: () -> Unit
+) {
+    val colors = LocalMadahiColors.current
+
+    MadahiBackground {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(26.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher),
-                contentDescription = "App Logo",
-                modifier = Modifier.fillMaxSize()
+
+            Spacer(Modifier.height(36.dp))
+
+            // ============ لوگو (هماهنگ با SplashScreen جدید) ============
+
+            CircularImage(
+                image = painterResource(R.drawable.ic_launcher),
+                size = 160.dp
             )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
 
-        // Title
-        Text(
-            text = if (isLoginMode) "ورود" else "ثبت نام",
-            fontSize = 28.sp,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
+            Text(
+                text = if (isLoginMode) "ورود" else "ثبت‌نام",
+                color = colors.textPrimary,
+                fontSize = 27.sp,
+                fontWeight = FontWeight.Bold
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
 
-        Text(
-            text = if (isLoginMode) "به دفتر مداحی خوش آمدید" else "ثبت نام در دفتر مداحی",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            Text(
+                text = if (isLoginMode) "به دفترچه مداحی خوش آمدید" else "همراه ما شوید",
+                color = colors.textSecondary,
+                fontSize = 14.sp
+            )
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
 
-        // ============ Form Card ============
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // ============ فرم شیشه‌ای ============
+            GlassCard(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // Full Name (فقط در حالت ثبت نام)
-                if (!isLoginMode) {
-                    OutlinedTextField(
-                        value = fullName,
-                        onValueChange = viewModel::updateFullName,
-                        label = { Text("نام و نام خانوادگی") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
 
-                // Mobile
-                OutlinedTextField(
-                    value = mobile,
-                    onValueChange = viewModel::updateMobile,
-                    label = { Text("شماره موبایل") },
-                    placeholder = { Text("09000000000") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = null
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    shape = RoundedCornerShape(12.dp),
-                    isError = uiState is LoginUiState.Error
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Submit Button
-                Button(
-                    onClick = viewModel::submit,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = uiState !is LoginUiState.Loading
+                Column(
+                    modifier = Modifier.padding(24.dp)
                 ) {
-                    if (uiState is LoginUiState.Loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
+
+                    // نام (فقط در حالت ثبت‌نام)
+                    if (!isLoginMode) {
                         Text(
-                            text = if (isLoginMode) "ورود" else "ثبت نام",
-                            fontSize = 16.sp
+                            text = "نام و نام خانوادگی",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        GlassTextField(
+                            value = fullName,
+                            onValueChange = onFullNameChange
+                        )
+                        Spacer(Modifier.height(16.dp))
+                    }
+
+                    Text(
+                        text = "شماره موبایل",
+                        color = colors.textSecondary,
+                        fontSize = 14.sp
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    GlassTextField(
+                        value = mobile,
+                        onValueChange = onMobileChange
+                    )
+
+                    // پیام خطا
+                    errorMessage?.let { msg ->
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = msg,
+                            color = colors.delete,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(Modifier.height(22.dp))
 
-                // Toggle Mode
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    TextButton(
-                        onClick = viewModel::toggleMode
-                    ) {
-                        Text(
-                            if (isLoginMode) "ثبت نام جدید" else "ورود به حساب کاربری"
+                    // دکمه اصلی
+                    ThreeDButton(
+                        text = if (isLoading) "لطفاً صبر کنید..." else if (isLoginMode) "ورود" else "ثبت‌نام",
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onSubmit
+                    )
+
+                    if (isLoading) {
+                        Spacer(Modifier.height(12.dp))
+                        CircularProgressIndicator(
+                            color = colors.gold,
+                            modifier = Modifier
+                                .size(26.dp)
+                                .align(Alignment.CenterHorizontally)
                         )
                     }
                 }
             }
+
+            Spacer(Modifier.height(18.dp))
+
+            // ============ تغییر حالت ورود/ثبت‌نام ============
+            Text(
+                text = if (isLoginMode) "حساب ندارید؟ ثبت‌نام کنید" else "قبلاً ثبت‌نام کرده‌اید؟ وارد شوید",
+                color = colors.textMuted,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .clickable(onClick = onToggleMode)
+                    .padding(8.dp)
+            )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ============ Privacy Policy ============
-        Text(
-            text = "با ورود یا ثبت نام، شرایط و قوانین را می‌پذیرید",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
     }
 }
 
-@Preview(showSystemUi = true)
+// ============================================================
+// Preview — با داده نمونه (بدون ViewModel → همیشه رندر می‌شود)
+// ============================================================
+
+@Preview(showBackground = false)
 @Composable
-fun LoginScreenPreview() {
-    LoginScreen {}
+private fun LoginScreenPreview() {
+    MadahiThemeGreen(darkTheme = true) {
+        LoginScreenContent(
+            isLoginMode = true,
+            fullName = "",
+            mobile = "0912",
+            isLoading = false,
+            errorMessage = null,
+            onFullNameChange = {},
+            onMobileChange = {},
+            onToggleMode = {},
+            onSubmit = {})
+    }
+}
+
+@Preview(showBackground = false)
+@Composable
+private fun RegisterScreenPreview() {
+    MadahiThemeGreen(darkTheme = false) {
+        LoginScreenContent(
+            isLoginMode = false,
+            fullName = "کاربر نمونه",
+            mobile = "09123456789",
+            isLoading = false,
+            errorMessage = "شماره موبایل معتبر نیست",
+            onFullNameChange = {},
+            onMobileChange = {},
+            onToggleMode = {},
+            onSubmit = {})
+    }
 }

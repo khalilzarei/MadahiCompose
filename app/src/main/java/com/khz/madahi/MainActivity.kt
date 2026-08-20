@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
         // Theme
         // =====================================================
 
-        applyTheme(!isNightMode)
+        applyTheme(isNightMode)
 
         // =====================================================
         // Compose
