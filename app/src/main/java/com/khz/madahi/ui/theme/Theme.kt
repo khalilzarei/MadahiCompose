@@ -12,6 +12,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -198,7 +199,6 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
     primaryContainer = Color(0xFFD0E4D0),
     onPrimaryContainer = Color(0xFF1F4F28),
 
-
     // --------------------------------------------------------
     // Secondary
     // --------------------------------------------------------
@@ -207,7 +207,6 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
 
     secondaryContainer = Color(0xFFD9E8D9),
     onSecondaryContainer = Color(0xFF214A29),
-
 
     // --------------------------------------------------------
     // Background
@@ -218,7 +217,6 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
     background = Color(0xFFE4EBE3),
     onBackground = Color(0xFF18221A),
 
-
     // --------------------------------------------------------
     // Surface
     //
@@ -226,7 +224,6 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
     // --------------------------------------------------------
     surface = Color(0xFFF7FAF6),
     onSurface = Color(0xFF18221A),
-
 
     // --------------------------------------------------------
     // Surface Variant
@@ -237,7 +234,6 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
     surfaceVariant = Color(0xFFDCE6DC),
     onSurfaceVariant = Color(0xFF526054),
 
-
     // --------------------------------------------------------
     // Error
     // --------------------------------------------------------
@@ -246,7 +242,6 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
 
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF5A1B16),
-
 
     // --------------------------------------------------------
     // Tertiary
@@ -259,7 +254,6 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
     tertiaryContainer = Color(0xFFF0DFB5),
     onTertiaryContainer = Color(0xFF49360A),
 
-
     // --------------------------------------------------------
     // Outline
     //
@@ -268,14 +262,12 @@ val LightMadahiColorsScheme: ColorScheme = lightColorScheme(
     outline = Color(0xFF9FB2A1),
     outlineVariant = Color(0xFFC7D2C7),
 
-
     // --------------------------------------------------------
     // Scrim
     //
     // Shadow
     // --------------------------------------------------------
     scrim = Color.Black.copy(alpha = 0.38f),
-
 
     // --------------------------------------------------------
     // Inverse
@@ -301,6 +293,21 @@ val ColorScheme.textMuted: Color
 
 val ColorScheme.primaryLight: Color
     get() = inversePrimary
+
+// افزودن به ColorScheme extensions در Theme.kt
+// ui/theme/Theme.kt — جایگزین سه خط فعلی
+val ColorScheme.deleteLight: Color
+    get() = if (isDarkScheme) Color(0xFFE85D5D) else Color(0xFFD96A6A)
+
+val ColorScheme.delete: Color
+    get() = if (isDarkScheme) Color(0xFFC62828) else Color(0xFFB74C44)   // = error در تم روز
+
+val ColorScheme.deleteEdge: Color
+    get() = if (isDarkScheme) Color(0xFF7F1717) else Color(0xFF8E2C26)
+
+// کمکی: تشخیص تم — به‌جای تکرار مقایسه‌ی background در ThemeExtensions
+private val ColorScheme.isDarkScheme: Boolean
+    get() = background.luminance() < 0.5f      // import androidx.compose.ui.graphics.luminance
 
 val ColorScheme.primaryDark: Color
     get() = primaryContainer

@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.khz.madahi.ui.theme.LocalMadahiColors
@@ -24,36 +26,44 @@ import com.khz.madahi.ui.theme.textPrimary
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(22.dp),
     content: @Composable () -> Unit
 ) {
     val colors = LocalMadahiColors.current
 
+    val surfaceBrush = remember(colors) {
+        Brush.verticalGradient(
+            listOf(
+                colors.surfaceGlassLight.copy(alpha = 0.78f),
+                colors.surfaceGlass.copy(alpha = 0.55f)
+            )
+        )
+    }
+    val borderBrush = remember(colors) {
+        Brush.verticalGradient(
+            listOf(
+                colors.borderLight,
+                colors.border.copy(alpha = 0.35f)
+            )
+        )
+    }
+
     Box(
         modifier = modifier
             .shadow(
-                elevation = 14.dp,
-                shape = RoundedCornerShape(22.dp),
+                14.dp,
+                shape,
                 ambientColor = colors.shadow,
                 spotColor = colors.shadow
             )
             .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        colors.surfaceGlassLight.copy(alpha = 0.78f),
-                        colors.surfaceGlass.copy(alpha = 0.55f)
-                    )
-                ),
-                shape = RoundedCornerShape(22.dp)
+                surfaceBrush,
+                shape
             )
             .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        colors.borderLight,
-                        colors.border.copy(alpha = 0.35f)
-                    )
-                ),
-                shape = RoundedCornerShape(22.dp)
+                1.dp,
+                borderBrush,
+                shape
             )
     ) {
         content()
