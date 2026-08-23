@@ -37,10 +37,10 @@ fun CategoryScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            TopHeader(
-                title = "دفترچه مداحی",
-                subtitle = "دسته‌بندی اشعار",
-                onHeaderBottonClicked = onSettings
+            TopTitleBar(
+                title = "title",
+                subTitle = "subtitle",
+                onBack = onSettings,
             )
 
             Spacer(Modifier.height(20.dp))

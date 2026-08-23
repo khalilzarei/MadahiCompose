@@ -25,6 +25,7 @@ import com.khz.madahi.ui.theme.textPrimary
 
 @Composable
 fun GlassTextField(
+    modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
     minHeight: Dp = 58.dp,
@@ -35,7 +36,7 @@ fun GlassTextField(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = minHeight)
             .background(
@@ -47,7 +48,7 @@ fun GlassTextField(
                 colors.border,
                 RoundedCornerShape(18.dp)
             )
-            .padding(18.dp),
+            .padding(14.dp),
         textStyle = TextStyle(
             color = colors.textPrimary,
             fontSize = 17.sp,

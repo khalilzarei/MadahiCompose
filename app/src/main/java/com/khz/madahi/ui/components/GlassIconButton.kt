@@ -1,64 +1,88 @@
+// ui/components/GlassIconButton.kt
 package com.khz.madahi.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
-import com.khz.madahi.ui.theme.border
-import com.khz.madahi.ui.theme.surfaceGlass
-import com.khz.madahi.ui.theme.surfaceGlassLight
+import com.khz.madahi.ui.theme.gold
 import com.khz.madahi.ui.theme.textPrimary
+
+// ============================================================
+// دکمه آیکونی شیشه‌ای سه‌بعدی
+// ------------------------------------------------------------
+// مثل Mini3DButton ولی دایره‌ای و با اندازه قابل تنظیم.
+// با فشردن، دکمه به پایین فرو می‌رود (جلوه سه‌بعدی).
+// ============================================================
 
 @Composable
 fun GlassIconButton(
-    text: String,
-    onClick: () -> Unit
+    imageVector: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color? = null,               // null → رنگ متن تم
+    size: Dp = 52.dp,
+    shape: Shape = CircleShape
 ) {
     val colors = LocalMadahiColors.current
 
-    Box(
-        modifier = Modifier
-            .size(52.dp)
-            .shadow(
-                8.dp,
-                CircleShape
-            )
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        colors.surfaceGlassLight,
-                        colors.surfaceGlass
-                    )
-                ),
-                CircleShape
-            )
-            .border(
-                1.dp,
-                colors.border,
-                CircleShape
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
+    val interactionSource = remember {
+        MutableInteractionSource()
+    }
 
-        Text(
-            text = text,
-            color = colors.textPrimary,
-            fontSize = 22.sp
-        )
+    val pressed by interactionSource.collectIsPressedAsState()
+
+    // فرو رفتن دکمه هنگام لمس (جلوه سه‌بعدی)
+    val offset by animateDpAsState(
+        targetValue = if (pressed) 3.dp else 0.dp,
+        label = "glass_icon_offset"
+    )
+
+    GlassCard3D(
+        modifier = modifier
+            .size(size)
+            .graphicsLayer {
+                translationY = offset.toPx()
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        shape = shape) {
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = imageVector,
+                contentDescription = null,
+                tint = tint
+                        ?: colors.textPrimary,
+                modifier = Modifier.size(size * 0.45f)
+            )
+        }
     }
 }
 
@@ -68,12 +92,11 @@ fun GlassIconButton(
 )
 @Composable
 fun GlassIconButtonPreview() {
-
-    val colors = LocalMadahiColors.current
     MadahiThemeGreen(darkTheme = true) {
-
+        val colors = LocalMadahiColors.current
         GlassIconButton(
-            text = "",
+            imageVector = androidx.compose.material.icons.Icons.Default.Add,
+            tint = colors.gold,
             onClick = {},
         )
     }

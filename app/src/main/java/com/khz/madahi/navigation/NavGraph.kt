@@ -191,6 +191,7 @@ fun NavGraph(
                 ContentScreen(
                     category = category,
                     onNavigateBack = { navController.popBackStack() },
+                    bottomBarActions = bottomBarActions,
                     onNavigateToContentDetail = { contentId ->
                         navController.navigate(Screen.ContentDetail.passContent(contentId))
                     },
@@ -204,7 +205,8 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("contentId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val contentId = backStackEntry.arguments?.getString("contentId")?.toInt()
+            val contentId = backStackEntry.arguments?.getString("contentId")
+                ?.toInt()
                     ?: GUEST_USER_ID
 
             val contentLoadState = produceState<Pair<Boolean, Content?>>(

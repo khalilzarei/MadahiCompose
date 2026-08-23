@@ -34,7 +34,6 @@ import com.khz.madahi.ui.common.BottomTab
 import com.khz.madahi.ui.common.EmptyContentScreen
 import com.khz.madahi.ui.common.ErrorContentScreen
 import com.khz.madahi.ui.components.BaseScreen
-import com.khz.madahi.ui.components.MadahiBackground
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,8 +66,16 @@ fun CategoryScreen(
 
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
-    MadahiBackground(
-        modifier = Modifier.fillMaxSize()
+    BaseScreen(
+        bottomBarActions = bottomBarActions,
+        title = "دسته بندی ها",
+        subtitle = "",
+        selectedBottomTab = BottomTab.CATEGORY,
+        onHeaderBottonClicked = {},
+        isCategory = true,
+        onFabAddBottonClicked = {
+            viewModel.showAddCategoryDialog()
+        },
     ) {
         when (uiState) {
             is CategoryUiState.Loading -> {
@@ -96,52 +103,39 @@ fun CategoryScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
 
-                        BaseScreen(
-                            bottomBarActions = bottomBarActions,
-                            title = "دسته بندی ها",
-                            subtitle = "",
-                            selectedBottomTab = BottomTab.CATEGORY,
-                            onHeaderBottonClicked = {},
-                            onFabAddBottonClicked = {
-                                viewModel.showAddCategoryDialog()
-                            },
+                        val distinctCategories = categories.distinctBy { it.id }
+                            .sortedByDescending { it.id }
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 30.dp),
+                            contentPadding = PaddingValues(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            state = listState,
                         ) {
+                            items(
+                                items = distinctCategories,
+                                key = { it.id }) { category ->
+                                CategoryItem(
+                                    category = category,
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            onNavigateToContent(category)
+                                        }
+                                    },
+                                    onEditClick = {
+                                        // کلیک روی سه نقطه -> باز شدن CategoryDialog
+                                        viewModel.showEditCategoryDialog(category)
 
-                            val distinctCategories = categories.distinctBy { it.id }
-                                .sortedByDescending { it.id }
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 30.dp),
-                                contentPadding = PaddingValues(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                state = listState,
-                            ) {
-                                items(
-                                    items = distinctCategories,
-                                    key = { it.id }) { category ->
-                                    CategoryItem(
-                                        category = category,
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                onNavigateToContent(category)
-                                            }
-                                        },
-                                        onEditClick = {
-                                            // کلیک روی سه نقطه -> باز شدن CategoryDialog
-                                            viewModel.showEditCategoryDialog(category)
-
-                                        },
-                                    )
-                                }
+                                    },
+                                )
                             }
+                        }
 
-                            LaunchedEffect(categories) {
-                                if (categories.isNotEmpty()) {
-                                    listState.scrollToItem(0)
-                                }
+                        LaunchedEffect(categories) {
+                            if (categories.isNotEmpty()) {
+                                listState.scrollToItem(0)
                             }
-
                         }
 
                     }

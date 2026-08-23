@@ -1,51 +1,47 @@
+// ui/contentdetail/ContentDetailScreen.kt
 package com.khz.madahi.ui.contentdetail
 
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,12 +49,35 @@ import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.api.RetrofitClient
 import com.khz.madahi.data.remote.repository.ContentRepository
-import com.khz.madahi.helper.extention.logD
 import com.khz.madahi.models.Content
-import com.khz.madahi.ui.theme.Gold
-import com.khz.madahi.ui.theme.PrimaryGreen
+import com.khz.madahi.ui.components.GlassCard3D
+import com.khz.madahi.ui.components.GlassTextField
+import com.khz.madahi.ui.components.Gold3DButton
+import com.khz.madahi.ui.components.MadahiBackground
+import com.khz.madahi.ui.components.Mini3DButton
+import com.khz.madahi.ui.components.ThreeDButton
+import com.khz.madahi.ui.components.TopTitleBar
+import com.khz.madahi.ui.theme.LocalMadahiColors
+import com.khz.madahi.ui.theme.MadahiThemeGreen
+import com.khz.madahi.ui.theme.border
+import com.khz.madahi.ui.theme.delete
+import com.khz.madahi.ui.theme.gold
+import com.khz.madahi.ui.theme.surfaceGlass
+import com.khz.madahi.ui.theme.textMuted
+import com.khz.madahi.ui.theme.textPrimary
+import com.khz.madahi.ui.theme.textSecondary
 
-@OptIn(ExperimentalMaterial3Api::class)
+// ============================================================
+// صفحه نمایش شعر — طراحی شیشه‌ای و سه‌بعدی
+// ------------------------------------------------------------
+// امکانات:
+//  - مشاهده شعر با امکان تغییر اندازه فونت
+//  - اشتراک‌گذاری
+//  - علاقه‌مندی (قلب)
+//  - ویرایش در همان صفحه (بدون دیالوگ)
+//    با کلیک روی ✏️ فیلدها ظاهر می‌شوند و «ذخیره» تغییرات را اعمال می‌کند
+// ============================================================
+
 @Composable
 fun ContentDetailScreen(
     content: Content?,
@@ -66,30 +85,32 @@ fun ContentDetailScreen(
     onFavoriteChanged: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
     val preferencesManager = remember { PreferencesManager(context) }
 
-    // ============ ذخیره و بازیابی اندازه فونت ============
-    var fontSize by remember {
-        mutableFloatStateOf(preferencesManager.contentFontSize)
-    }
-
-    fun saveFontSize(size: Float) {
-        preferencesManager.contentFontSize = size
-        fontSize = size
-    }
-
+    // ============ اگر محتوا null بود ============
     if (content == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "محتوا یافت نشد",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.error
-            )
+        val colors = LocalMadahiColors.current
+        MadahiBackground {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+            ) {
+                TopTitleBar(
+                    title = "",
+                    onBack = onNavigateBack
+                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "محتوا یافت نشد",
+                        color = colors.textMuted,
+                        fontSize = 18.sp
+                    )
+                }
+            }
         }
         return
     }
@@ -109,24 +130,24 @@ fun ContentDetailScreen(
         )
     )
 
-    // ✅ رفع باگ: قبلاً viewModel.loadFavoriteStatus(content) مستقیم در بدنه‌ی
-    // Composable صدا زده می‌شد که یعنی با هر recomposition (مثلاً تغییر fontSize
-    // یا هر state دیگری) دوباره اجرا می‌شد و یک کوروتین جدید و غیرضروری لانچ
-    // می‌کرد. الان با LaunchedEffect(content.id) فقط زمانی اجرا می‌شود که
-    // محتوا واقعاً عوض شده باشد.
+    // ✅ فقط یک بار برای هر محتوا
     LaunchedEffect(content.id) {
         viewModel.loadFavoriteStatus(content)
     }
 
     val favoriteState by viewModel.favoriteState.collectAsState()
-    val favorite by viewModel.favorite.collectAsState()
 
-    // تشخیص نوع محتوا
-    val isNoheh = content.contentType == "0"
-    val primaryColor = if (isNoheh) Gold else PrimaryGreen
-    val typeText = if (isNoheh) "نوحه" else "روضه"
+    // ============ اندازه فونت (ذخیره و بازیابی) ============
+    var fontSize by remember {
+        mutableFloatStateOf(preferencesManager.contentFontSize)
+    }
 
-    // متن نمایشی
+    fun saveFontSize(size: Float) {
+        preferencesManager.contentFontSize = size
+        fontSize = size
+    }
+
+    // ============ متن نمایشی (پاک‌سازی تگ‌ها) ============
     val displayContent = content.content.replace(
         "<p>",
         ""
@@ -149,210 +170,395 @@ fun ContentDetailScreen(
         )
         .trim()
 
-    LaunchedEffect(favoriteState) {
-        logD("favoriteState: $favoriteState")
+    // ============ اشتراک‌گذاری ============
+    val onShare = {
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(
+                Intent.EXTRA_TEXT,
+                """
+                📖 ${content.subject}
+                ﷺ ${content.answer}
+
+                $displayContent
+
+                ──────────────
+                📱 دفتر مداحی
+                """.trimIndent()
+            )
+            type = "text/plain"
+        }
+        context.startActivity(
+            Intent.createChooser(
+                shareIntent,
+                "اشتراک‌ گذاری محتوا"
+            )
+        )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = content.answer,
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                },
-                navigationIcon = { },
-                actions = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // دکمه اشتراک‌گذاری
-                        IconButton(
-                            onClick = {
-                                val shareIntent = Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(
-                                        Intent.EXTRA_TEXT,
-                                        """
-                                        📖 ${content.subject}
-                                        ﷺ ${content.answer}
-                                        
-                                        $displayContent
-                                        
-                                        ──────────────
-                                        📱 دفتر مداحی
-                                        """.trimIndent()
-                                    )
-                                    type = "text/plain"
-                                }
-                                context.startActivity(
-                                    Intent.createChooser(
-                                        shareIntent,
-                                        "اشتراک‌ گذاری محتوا"
-                                    )
-                                )
-                            },
-                            modifier = Modifier.background(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                shape = CircleShape
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = "اشتراک‌ گذاری",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                if (fontSize > 12f) {
-                                    saveFontSize(fontSize - 2f)
-                                }
-                            },
-                            modifier = Modifier.background(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                shape = CircleShape
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ZoomOut,
-                                contentDescription = "کاهش فونت",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                if (fontSize < 30f) {
-                                    saveFontSize(fontSize + 2f)
-                                }
-                            },
-                            modifier = Modifier.background(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                shape = CircleShape
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ZoomIn,
-                                contentDescription = "افزایش فونت",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        IconButton(
-                            onClick = onNavigateBack,
-                            modifier = Modifier.background(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                shape = CircleShape
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "بازگشت",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    viewModel.toggleFavorite(content) {
-                        onFavoriteChanged()
-                    }
-                },
-                containerColor = if (favoriteState is FavoriteState.Favorite) {
-                    Color.Red
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
-                contentColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier.size(60.dp)
-            ) {
-                Icon(
-                    imageVector = if (favoriteState is FavoriteState.Favorite) {
-                        Icons.Default.Favorite
-                    } else {
-                        Icons.Default.FavoriteBorder
-                    },
-                    contentDescription = if (favoriteState is FavoriteState.Favorite) {
-                        "حذف از علاقه‌مندی‌ها"
-                    } else {
-                        "افزودن به علاقه‌مندی‌ها"
-                    },
-                    modifier = Modifier.size(30.dp),
-                    tint = Color.White
-                )
+    // ============ UI (stateless) ============
+    ContentDetailScreenContent(
+        content = content,
+        displayContent = displayContent,
+        fontSize = fontSize,
+        favoriteState = favoriteState,
+        onFontSizeChange = { saveFontSize(it) },
+        onToggleFavorite = {
+            viewModel.toggleFavorite(content) {
+                onFavoriteChanged()
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { paddingValues ->
+        onShare = onShare,
+        onNavigateBack = onNavigateBack
+    )
+}
 
-        Card(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(4.dp)
-        ) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                text = displayContent,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = fontSize.sp,
-                    lineHeight = (fontSize * 1.8f).sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-            )
-        }
+// ============================================================
+// UI خالص — بدون ViewModel (برای Preview و تست)
+// ============================================================
+
+@Composable
+fun ContentDetailScreenContent(
+    content: Content,
+    displayContent: String,
+    fontSize: Float,
+    favoriteState: FavoriteState,
+    onFontSizeChange: (Float) -> Unit,
+    onToggleFavorite: () -> Unit,
+    onShare: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    val colors = LocalMadahiColors.current
+
+    // ============ state ویرایش (داخل همین صفحه) ============
+    var isEditing by remember { mutableStateOf(true) }
+
+    // فیلدهای ویرایش — مقدار اولیه از خود محتوا
+    var editSubject by remember { mutableStateOf(content.subject) }
+    var editAnswer by remember { mutableStateOf(content.answer) }
+    var editContent by remember { mutableStateOf(displayContent) }
+
+    // بازنشانی وقتی محتوا عوض شد
+    LaunchedEffect(content.id) {
+        editSubject = content.subject
+        editAnswer = content.answer
+        editContent = displayContent
+        isEditing = false
     }
 
-    // ============ نمایش خطاها ============
-    if (favoriteState is FavoriteState.Error) {
-        // TODO: نمایش Snackbar خطا
+    fun startEditing() {
+        editSubject = content.subject
+        editAnswer = content.answer
+        editContent = displayContent
+        isEditing = true
+    }
+
+    MadahiBackground {
+
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            // ============ هدر ============
+            if (!isEditing) {
+                TopTitleBar(
+                    title = content.subject.ifBlank { "" },
+                    subTitle = content.answer.ifBlank { " " },
+                    onBack = onNavigateBack
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+            }
+            // ================================================
+            // اگر در حالت ویرایش → فرم ویرایش
+            // ================================================
+            if (isEditing) {
+
+                GlassCard3D(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .weight(1f)
+                ) {
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = 22.dp,
+                                vertical = 24.dp
+                            )
+                    ) {
+
+                        Text(
+                            text = "عنوان",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        GlassTextField(
+                            value = editSubject,
+                            onValueChange = { editSubject = it },
+                            minHeight = 52.dp
+                        )
+
+                        Spacer(Modifier.height(14.dp))
+
+                        Text(
+                            text = "جواب (اختیاری)",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        GlassTextField(
+                            value = editAnswer,
+                            onValueChange = { editAnswer = it },
+                            minHeight = 52.dp
+                        )
+
+                        Spacer(Modifier.height(14.dp))
+
+                        Text(
+                            text = "متن",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    colors.surfaceGlass.copy(alpha = 0.55f),
+                                    RoundedCornerShape(18.dp)
+                                )
+                                .border(
+                                    1.dp,
+                                    colors.border,
+                                    RoundedCornerShape(18.dp)
+                                )
+                                .weight(1f),
+                        ) {
+
+                            BasicTextField(
+                                value = editContent,
+                                onValueChange = {
+                                    editContent = it
+                                },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState())
+                                    .background(
+                                        colors.surfaceGlass.copy(alpha = 0.55f),
+                                        RoundedCornerShape(18.dp)
+                                    )
+                                    .padding(14.dp),
+                                textStyle = TextStyle(
+                                    color = colors.textPrimary,
+                                    fontSize = 17.sp,
+                                    lineHeight = 30.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            )
+
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // ============ دکمه‌های ذخیره/انصراف ============
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    Gold3DButton(
+                        text = "انصراف",
+                        modifier = Modifier.weight(1f),
+                        onClick = { isEditing = false })
+
+                    ThreeDButton(
+                        text = "ذخیره",
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            // ⚠️ اینجا باید به ViewModel وصل شود:
+                            // viewModel.editContent() یا متد مشابه
+                            isEditing = false
+                        })
+                }
+
+            } else {
+
+                // ================================================
+                // حالت نمایش — متن شعر
+                // ================================================
+
+                GlassCard3D(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .weight(1f)
+                ) {
+
+                    Text(
+                        text = displayContent,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(
+                                horizontal = 22.dp,
+                                vertical = 26.dp
+                            ),
+                        color = colors.textPrimary,
+                        fontSize = fontSize.sp,
+                        lineHeight = (fontSize * 1.8f).sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // ============ نوار دکمه‌ها — پایین صفحه ============
+                GlassCard3D(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 24.dp,
+                            end = 24.dp,
+                            bottom = 12.dp
+                        )
+                ) {
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 12.dp
+                            ),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        // اشتراک‌گذاری
+                        Mini3DButton(
+                            imageVector = Icons.Default.Share,
+                            tint = colors.gold,
+                            onClick = onShare,
+                        )
+
+                        // کاهش فونت
+                        Mini3DButton(
+                            imageVector = Icons.Default.ZoomOut,
+                            tint = colors.gold,
+                            onClick = {
+                                if (fontSize > 12f) onFontSizeChange(fontSize - 2f)
+                            },
+                        )
+
+                        // افزایش فونت
+                        Mini3DButton(
+                            imageVector = Icons.Default.ZoomIn,
+                            tint = colors.gold,
+                            onClick = {
+                                if (fontSize < 30f) onFontSizeChange(fontSize + 2f)
+                            },
+                        )
+
+                        // ✏️ ویرایش — ورود به حالت ویرایش در همین صفحه
+                        Mini3DButton(
+                            imageVector = Icons.Default.Edit,
+                            tint = colors.gold,
+                            onClick = { startEditing() },
+                        )
+
+                        // علاقه‌مندی (قلب — با رنگ پویا)
+                        GlassCard3D(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clickable(onClick = onToggleFavorite)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (favoriteState is FavoriteState.Favorite) {
+                                        Icons.Default.Favorite
+                                    } else {
+                                        Icons.Default.FavoriteBorder
+                                    },
+                                    contentDescription = null,
+                                    tint = if (favoriteState is FavoriteState.Favorite) {
+                                        colors.delete
+                                    } else {
+                                        colors.gold
+                                    },
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(6.dp))
+        }
     }
 }
 
-// ============ Preview ============
-//@Preview(showBackground = true)
+// ============================================================
+// Preview — با داده نمونه (بدون ViewModel → همیشه رندر می‌شود)
+// ============================================================
+//
+//@Preview(showBackground = false)
 //@Composable
-//fun ContentDetailScreenPreview() {
-//    MaterialTheme {
-//        ContentDetailScreen(
+//private fun ContentDetailScreenPreview() {
+//    MadahiThemeGreen(darkTheme = true) {
+//        ContentDetailScreenContent(
 //            content = Content(
 //                idContent = 0,
-//                id = "1",
-//                categoryId = "1",
-//                userId = "1",
-//                answer = "مجموعه نوحه‌های مناسبتی",
+//                id = 1,
+//                categoryId = 1,
+//                userId = 1,
+//                answer = "ای اهل حرم",
 //                content = "<p>متن نمونه برای نمایش در صفحه جزئیات محتوا. این متن برای تست و نمایش ظاهر صفحه استفاده می‌شود.</p>",
 //                subject = "نوحه‌های محرم",
 //                contentType = "0"
 //            ),
+//            displayContent = "متن نمونه برای نمایش در صفحه جزئیات محتوا. این متن برای تست و نمایش ظاهر صفحه استفاده می‌شود.",
+//            fontSize = 16f,
+//            favoriteState = FavoriteState.NotFavorite,
+//            onFontSizeChange = {},
+//            onToggleFavorite = {},
+//            onShare = {},
 //            onNavigateBack = {})
 //    }
 //}
+
+@Preview(showBackground = false)
+@Composable
+private fun ContentDetailScreenPreviewLight() {
+    MadahiThemeGreen(darkTheme = false) {
+        ContentDetailScreenContent(
+            content = Content(
+                idContent = 0,
+                id = 2,
+                categoryId = 1,
+                userId = 1,
+                answer = "روضه حضرت زهرا",
+                content = "<p>متن نمونه روضه...</p>",
+                subject = "روضه‌های فاطمیه",
+                contentType = "1"
+            ),
+            displayContent = "متن نمونه روضه...",
+            fontSize = 18f,
+            favoriteState = FavoriteState.Favorite,
+            onFontSizeChange = {},
+            onToggleFavorite = {},
+            onShare = {},
+            onNavigateBack = {})
+    }
+}

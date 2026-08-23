@@ -331,6 +331,7 @@ fun SettingScreen(
 
                                 Mini3DButton(
                                     imageVector = Icons.Default.Remove,
+                                    tint = colors.gold,
                                     onClick = {
                                         if (preferencesManager.fontSize > 11) {
                                             preferencesManager.fontSize--
@@ -348,6 +349,7 @@ fun SettingScreen(
 
                                 Mini3DButton(
                                     imageVector = Icons.Default.Add,
+                                    tint = colors.gold,
                                     onClick = {
                                         if (preferencesManager.fontSize < 35) {
                                             preferencesManager.fontSize++

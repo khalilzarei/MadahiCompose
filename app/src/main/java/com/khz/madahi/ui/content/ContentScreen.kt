@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,16 +27,17 @@ import com.khz.madahi.data.remote.api.RetrofitClient
 import com.khz.madahi.data.remote.repository.ContentRepository
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
+import com.khz.madahi.ui.common.BottomBarActions
+import com.khz.madahi.ui.common.BottomTab
 import com.khz.madahi.ui.common.EmptyContentScreen
 import com.khz.madahi.ui.common.ErrorContentScreen
-import com.khz.madahi.ui.components.GlassCard3D
-import com.khz.madahi.ui.components.MadahiBackground
-import com.khz.madahi.ui.components.TopHeader
+import com.khz.madahi.ui.components.BaseScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentScreen(
     category: Category?,
+    bottomBarActions: BottomBarActions,
     onNavigateBack: () -> Unit,
     onNavigateToContentDetail: (Int) -> Unit
 ) {
@@ -79,7 +79,16 @@ fun ContentScreen(
 //        selectedBottomTab = BottomTab.CATEGORY,
 //        onHeaderBottonClicked = { onNavigateBack() },
 //    )
-    MadahiBackground {
+    BaseScreen(
+        bottomBarActions = bottomBarActions,
+        title = viewModel.getCategoryTitle(),
+        subtitle = "",
+        selectedBottomTab = BottomTab.CATEGORY,
+        onHeaderBottonClicked = { onNavigateBack() },
+        onFabAddBottonClicked = {
+            viewModel.showAddDialog()
+        },
+    ) {
         Column {
             Box(
                 modifier = Modifier.fillMaxSize()
@@ -96,11 +105,8 @@ fun ContentScreen(
                             )
                         } else {
                             Column {
-                                TopHeader(
-                                    title = viewModel.getCategoryTitle(),
-                                    subtitle = "",
-                                    onHeaderBottonClicked = { onNavigateBack() },
-                                )
+                                val distinctContents = contents.distinctBy { it.id }
+                                    .sortedByDescending { it.id }
                                 LazyColumn(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -110,7 +116,7 @@ fun ContentScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     items(
-                                        items = contents,
+                                        items = distinctContents,
                                         key = { "${it.id}_${it.idContent}" }) { content ->
                                         ContentItem(
                                             content = content,
@@ -124,15 +130,6 @@ fun ContentScreen(
                                             })
                                     }
                                 }
-                                GlassCard3D(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(24.dp)
-                                        .height(92.dp),
-                                ) {
-
-                                }
-
                             }
                         }
                     }

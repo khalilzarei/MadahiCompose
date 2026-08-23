@@ -16,17 +16,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
-import com.khz.madahi.ui.theme.textPrimary
+import com.khz.madahi.ui.theme.TextPrimary
 
 @Composable
 fun Mini3DButton(
     imageVector: ImageVector = Icons.Outlined.Delete,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    tint: Color = TextPrimary
 ) {
     val colors = LocalMadahiColors.current
 
@@ -60,7 +62,7 @@ fun Mini3DButton(
             Icon(
                 imageVector = imageVector,
                 contentDescription = null,
-                tint = colors.textPrimary,
+                tint = tint,
                 modifier = Modifier.size(24.dp)
             )
         }

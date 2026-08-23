@@ -25,16 +25,18 @@ fun BaseScreen(
     onHeaderBottonClicked: () -> Unit = {},
     onFabAddBottonClicked: () -> Unit = {},
     selectedBottomTab: BottomTab,
+    isCategory: Boolean = false,
     content: @Composable () -> Unit
 ) {
     MadahiBackground {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            TopHeader(
+            TopTitleBar(
                 title = title,
-                subtitle = subtitle,
-                onHeaderBottonClicked = onHeaderBottonClicked
+                subTitle = subtitle,
+                onBack = onHeaderBottonClicked,
+                isCategory = isCategory
             )
 
             Box(

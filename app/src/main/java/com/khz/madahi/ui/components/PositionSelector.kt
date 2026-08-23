@@ -1,6 +1,5 @@
 package com.khz.madahi.ui.components
 
-import android.R.attr.onClick
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -51,7 +49,7 @@ fun PositionSelector(
 
             Mini3DButton(
                 imageVector = Icons.Default.Mic,
-                onClick = onDecrease
+                onClick = onDecrease,
             )
 
             Text(
@@ -63,7 +61,7 @@ fun PositionSelector(
 
             Mini3DButton(
                 imageVector = Icons.Default.Add,
-                onClick = onIncrease
+                onClick = onIncrease,
             )
         }
     }
