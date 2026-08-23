@@ -246,7 +246,9 @@ fun NavGraph(
         composable(Screen.ProfileScreen.route) {
             ProfileScreen(
                 bottomBarActions = bottomBarActions,
-            )
+                onNavigateToLogin = {
+                    navController.navigate(Screen.LoginScreen.route)
+                })
         }
 
         // ============ Message ============

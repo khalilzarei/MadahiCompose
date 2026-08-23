@@ -26,8 +26,10 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,6 +52,7 @@ import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.api.RetrofitClient
 import com.khz.madahi.data.remote.repository.ContentRepository
 import com.khz.madahi.models.Content
+import com.khz.madahi.ui.components.Delete3DButton
 import com.khz.madahi.ui.components.GlassCard3D
 import com.khz.madahi.ui.components.GlassTextField
 import com.khz.madahi.ui.components.Gold3DButton
@@ -57,6 +60,7 @@ import com.khz.madahi.ui.components.MadahiBackground
 import com.khz.madahi.ui.components.Mini3DButton
 import com.khz.madahi.ui.components.ThreeDButton
 import com.khz.madahi.ui.components.TopTitleBar
+import com.khz.madahi.ui.content.DeleteContentDialog
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
 import com.khz.madahi.ui.theme.border
@@ -137,6 +141,10 @@ fun ContentDetailScreen(
 
     val favoriteState by viewModel.favoriteState.collectAsState()
 
+    // ============ وضعیت حذف ============
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
+
     // ============ اندازه فونت (ذخیره و بازیابی) ============
     var fontSize by remember {
         mutableFloatStateOf(preferencesManager.contentFontSize)
@@ -209,8 +217,39 @@ fun ContentDetailScreen(
             }
         },
         onShare = onShare,
-        onNavigateBack = onNavigateBack
+        onNavigateBack = onNavigateBack,
+        onDeleteClick = { showDeleteDialog = true }
     )
+
+    // ============ دیالوگ تأیید حذف ============
+    if (showDeleteDialog) {
+        DeleteContentDialog(
+            content = content,
+            onDelete = {
+                showDeleteDialog = false
+                viewModel.deleteContent(
+                    content = content,
+                    onSuccess = { onNavigateBack() },
+                    onError = { msg -> deleteError = msg }
+                )
+            },
+            onDismiss = { showDeleteDialog = false }
+        )
+    }
+
+    // ============ خطای حذف ============
+    deleteError?.let { message ->
+        AlertDialog(
+            onDismissRequest = { deleteError = null },
+            title = { Text("❌ خطا") },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = { deleteError = null }) {
+                    Text("تأیید")
+                }
+            }
+        )
+    }
 }
 
 // ============================================================
@@ -226,7 +265,8 @@ fun ContentDetailScreenContent(
     onFontSizeChange: (Float) -> Unit,
     onToggleFavorite: () -> Unit,
     onShare: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val colors = LocalMadahiColors.current
 
@@ -368,11 +408,17 @@ fun ContentDetailScreenContent(
 
                 Spacer(Modifier.height(16.dp))
 
-                // ============ دکمه‌های ذخیره/انصراف ============
+                // ============ دکمه‌های حذف/انصراف/ذخیره ============
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+
+                    Delete3DButton(
+                        text = "حذف",
+                        modifier = Modifier.weight(1f),
+                        onClick = onDeleteClick
+                    )
 
                     Gold3DButton(
                         text = "انصراف",
@@ -559,6 +605,7 @@ private fun ContentDetailScreenPreviewLight() {
             onFontSizeChange = {},
             onToggleFavorite = {},
             onShare = {},
-            onNavigateBack = {})
+            onNavigateBack = {},
+            onDeleteClick = {})
     }
 }

@@ -17,6 +17,9 @@ interface CategoryDAO {
     @Query("SELECT * FROM table_name_categories ORDER BY idCategory DESC")
     suspend fun getAll(): List<Category>
 
+    @Query("SELECT COUNT(*) FROM table_name_categories WHERE userId = :userId")
+    suspend fun countByUserId(userId: Int): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(category: Category)
 

@@ -39,7 +39,9 @@ import com.khz.madahi.ui.components.ThreeDButton
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiTheme
 import com.khz.madahi.ui.theme.border
+import com.khz.madahi.ui.theme.delete
 import com.khz.madahi.ui.theme.surfaceGlass
+import com.khz.madahi.ui.theme.textMuted
 import com.khz.madahi.ui.theme.textPrimary
 import com.khz.madahi.ui.theme.textSecondary
 
@@ -58,6 +60,9 @@ fun ContentDialog(
     contentText: String,
     isNoheh: Boolean,
     isEditMode: Boolean,
+    subjectError: String? = null,
+    contentError: String? = null,
+    errorMessage: String? = null,
     onSubjectChange: (String) -> Unit,
     onAnswerChange: (String) -> Unit,
     onContentChange: (String) -> Unit,
@@ -82,6 +87,9 @@ fun ContentDialog(
                 contentText = contentText,
                 isNoheh = isNoheh,
                 isEditMode = isEditMode,
+                subjectError = subjectError,
+                contentError = contentError,
+                errorMessage = errorMessage,
                 onSubjectChange = onSubjectChange,
                 onAnswerChange = onAnswerChange,
                 onContentChange = onContentChange,
@@ -100,6 +108,9 @@ fun ContentDialogContent(
     contentText: String,
     isNoheh: Boolean,
     isEditMode: Boolean,
+    subjectError: String? = null,
+    contentError: String? = null,
+    errorMessage: String? = null,
     onSubjectChange: (String) -> Unit,
     onAnswerChange: (String) -> Unit,
     onContentChange: (String) -> Unit,
@@ -155,8 +166,25 @@ fun ContentDialogContent(
                     GlassTextField(
                         value = subject,
                         onValueChange = onSubjectChange,
-                        minHeight = 52.dp
+                        minHeight = 52.dp,
+                        hasError = subjectError != null,
+                        hint = "عنوان را فقط با حروف بنویسید (بدون ایموجی)"
                     )
+
+                    // ✅ خطای فیلد عنوان — زیر همان فیلد (مثل setError)
+                    if (subjectError != null) {
+                        Text(
+                            text = "⚠️ $subjectError",
+                            color = colors.delete,
+                            fontSize = 13.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    top = 5.dp,
+                                    start = 8.dp
+                                )
+                        )
+                    }
 
                     Spacer(Modifier.height(10.dp))
 
@@ -195,11 +223,25 @@ fun ContentDialogContent(
                             )
                             .border(
                                 1.dp,
-                                colors.border,
+                                if (contentError != null) colors.delete else colors.border,
                                 RoundedCornerShape(18.dp)
                             )
                             .weight(1f),
                     ) {
+
+                        // ✅ هینت — فقط وقتی فیلد خالی است نمایش داده می‌شود
+                        if (contentText.isEmpty()) {
+                            Text(
+                                text = "متن را فقط با حروف بنویسید — ایموجی و علائم خاص ذخیره نمی‌شوند",
+                                color = colors.textMuted,
+                                fontSize = 15.sp,
+                                lineHeight = 30.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(14.dp)
+                            )
+                        }
 
                         BasicTextField(
                             value = contentText,
@@ -221,7 +263,36 @@ fun ContentDialogContent(
                         )
 
                     }
+
+                    // ✅ خطای فیلد متن — زیر همان فیلد (مثل setError)
+                    if (contentError != null) {
+                        Text(
+                            text = "⚠️ $contentError",
+                            color = colors.delete,
+                            fontSize = 13.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    top = 6.dp,
+                                    start = 8.dp
+                                )
+                        )
+                    }
                 }
+            }
+
+            // ============ پیام خطای عمومی (مثلاً سرور) ============
+            if (errorMessage != null) {
+                Text(
+                    text = "⚠️ $errorMessage",
+                    color = colors.delete,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                )
             }
 
             Spacer(Modifier.height(16.dp))

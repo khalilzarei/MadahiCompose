@@ -3,8 +3,6 @@ package com.khz.madahi.ui.about
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,7 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,6 +46,7 @@ import com.khz.madahi.ui.theme.primaryDark
 import com.khz.madahi.ui.theme.textMuted
 import com.khz.madahi.ui.theme.textPrimary
 import com.khz.madahi.ui.theme.textSecondary
+import androidx.core.net.toUri
 
 // ============================================================
 // صفحه درباره ما — سبک شیشه‌ای و سه‌بعدی
@@ -61,6 +65,7 @@ fun AboutScreen(
         title = "درباره ما",
         subtitle = "",
         selectedBottomTab = BottomTab.ABOUT,
+        isCategory = true,
     ) {
 
         Column(
@@ -86,7 +91,10 @@ fun AboutScreen(
                     Box(
                         modifier = Modifier
                             .size(90.dp)
-                            .shadow(18.dp, CircleShape)
+                            .shadow(
+                                18.dp,
+                                CircleShape
+                            )
                             .background(
                                 Brush.radialGradient(
                                     listOf(
@@ -126,8 +134,7 @@ fun AboutScreen(
                     Spacer(Modifier.height(16.dp))
 
                     Text(
-                        text = "این اپلیکیشن برای ذخیره‌سازی و دسته‌بندی نوحه‌ها، " +
-                                "اشعار و دیالوگ‌های مداحی طراحی شده است.",
+                        text = "این اپلیکیشن برای ذخیره‌سازی و دسته‌بندی نوحه‌ها، " + "اشعار و دیالوگ‌های مداحی طراحی شده است.",
                         color = colors.textMuted,
                         fontSize = 15.sp,
                         lineHeight = 28.sp,
@@ -147,23 +154,30 @@ fun AboutScreen(
                         try {
                             val intent = Intent(
                                 Intent.ACTION_DIAL,
-                                Uri.parse("tel:09362371808")
+                                "tel:09362371808".toUri()
                             )
                             context.startActivity(intent)
                         } catch (e: Exception) {
                             // اگر Intent در دسترس نبود، کاری نمی‌کنیم
                         }
-                    }
-            ) {
+                    }) {
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 22.dp, vertical = 18.dp),
+                        .padding(
+                            horizontal = 22.dp,
+                            vertical = 18.dp
+                        ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    Text(text = "📞", fontSize = 22.sp)
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = "label",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(35.dp)
+                    )
 
                     Spacer(Modifier.width(14.dp))
 
@@ -185,11 +199,6 @@ fun AboutScreen(
                         )
                     }
 
-                    Text(
-                        text = "‹",
-                        color = colors.textSecondary,
-                        fontSize = 22.sp
-                    )
                 }
             }
 

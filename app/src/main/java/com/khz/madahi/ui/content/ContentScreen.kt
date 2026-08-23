@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
@@ -61,6 +65,20 @@ fun ContentScreen(
         )
     )
 
+    // ✅ وقتی به صفحه برمی‌گردیم (مثلاً بعد از حذف محتوا از صفحه جزئیات)، لیست را رفرش کن
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     val uiState by viewModel.uiState.collectAsState()
     val contents by viewModel.contents.collectAsState()
     val isDialogVisible by viewModel.isDialogVisible.collectAsState()
@@ -69,6 +87,9 @@ fun ContentScreen(
     val dialogAnswer by viewModel.dialogAnswer.collectAsState()
     val dialogContentText by viewModel.dialogContent.collectAsState()
     val isNoheh by viewModel.isNoheh.collectAsState()
+    val subjectError by viewModel.subjectError.collectAsState()
+    val contentError by viewModel.contentError.collectAsState()
+    val dialogMessage by viewModel.dialogMessage.collectAsState()
 
     // ============ Scaffold ============
 
@@ -153,6 +174,9 @@ fun ContentScreen(
             contentText = dialogContentText,
             isNoheh = isNoheh,
             isEditMode = editingContent != null,
+            subjectError = subjectError,
+            contentError = contentError,
+            errorMessage = dialogMessage,
             onSubjectChange = viewModel::updateSubject,
             onAnswerChange = viewModel::updateAnswer,
             onContentChange = viewModel::updateContent,

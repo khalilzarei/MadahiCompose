@@ -58,6 +58,9 @@ fun CategoryScreen(
     val editingCategory by viewModel.editingCategory.collectAsState()
     val dialogTitle by viewModel.dialogTitle.collectAsState()
     val dialogDescription by viewModel.dialogDescription.collectAsState()
+    val titleError by viewModel.titleError.collectAsState()
+    val descriptionError by viewModel.descriptionError.collectAsState()
+    val dialogMessage by viewModel.dialogMessage.collectAsState()
     val listState = rememberLazyListState()
 
     // ============ Dialog State ============
@@ -158,6 +161,9 @@ fun CategoryScreen(
             title = dialogTitle,
             description = dialogDescription,
             isEditMode = editingCategory != null,
+            titleError = titleError,
+            descriptionError = descriptionError,
+            errorMessage = dialogMessage,
             onTitleChange = viewModel::updateDialogTitle,
             onDescriptionChange = viewModel::updateDialogDescription,
             onDismiss = viewModel::hideDialog,

@@ -328,6 +328,43 @@ class ContentDetailViewModel(
             }
         }
     }
+
+    // ============ Delete Content ============
+    fun deleteContent(
+        content: Content,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            logD("deleteContent: contentId=${content.id}")
+
+            val userId = preferencesManager.user?.id
+                    ?: GUEST_USER_ID
+
+            // ✅ ابتدا حذف از دیتابیس محلی
+            appDatabase.contentDAO()
+                .delete(content)
+
+            when (val result = contentRepository.deleteContent(
+                userId,
+                content.id
+            )) {
+                is Result.Success -> {
+                    logD("deleteContent: ✅ Deleted from server")
+                    onSuccess()
+                }
+
+                is Result.Error   -> {
+                    // ✅ در صورت خطا، حذف محلی را برگشت می‌دهیم
+                    appDatabase.contentDAO()
+                        .insert(content)
+                    onError(result.message)
+                }
+
+                is Result.Loading -> { /* ignore */ }
+            }
+        }
+    }
 }
 
 // ============ Favorite State ============

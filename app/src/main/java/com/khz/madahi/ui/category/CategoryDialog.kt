@@ -35,6 +35,7 @@ import com.khz.madahi.ui.components.Gold3DButton
 import com.khz.madahi.ui.components.ThreeDButton
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiTheme
+import com.khz.madahi.ui.theme.delete
 import com.khz.madahi.ui.theme.textMuted
 import com.khz.madahi.ui.theme.textPrimary
 import com.khz.madahi.ui.theme.textSecondary
@@ -49,6 +50,9 @@ fun CategoryDialog(
     title: String,
     description: String,
     isEditMode: Boolean,
+    titleError: String? = null,
+    descriptionError: String? = null,
+    errorMessage: String? = null,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -70,6 +74,9 @@ fun CategoryDialog(
                 title = title,
                 description = description,
                 isEditMode = isEditMode,
+                titleError = titleError,
+                descriptionError = descriptionError,
+                errorMessage = errorMessage,
                 onTitleChange = onTitleChange,
                 onDescriptionChange = onDescriptionChange,
                 onConfirm = onConfirm,
@@ -89,6 +96,9 @@ fun CategoryDialogContent(
     title: String,
     description: String,
     isEditMode: Boolean,
+    titleError: String? = null,
+    descriptionError: String? = null,
+    errorMessage: String? = null,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onConfirm: () -> Unit,
@@ -150,8 +160,21 @@ fun CategoryDialogContent(
                 value = title,
                 onValueChange = onTitleChange,
                 minHeight = 54.dp,
-                keyboardType = KeyboardType.Text
+                keyboardType = KeyboardType.Text,
+                hasError = titleError != null
             )
+
+            // ✅ خطای فیلد عنوان — زیر همان فیلد (مثل setError)
+            if (titleError != null) {
+                Text(
+                    text = "⚠️ $titleError",
+                    color = colors.delete,
+                    fontSize = 13.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 5.dp, start = 8.dp)
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -171,8 +194,34 @@ fun CategoryDialogContent(
                 value = description,
                 onValueChange = onDescriptionChange,
                 minHeight = 54.dp,
-                keyboardType = KeyboardType.Text
+                keyboardType = KeyboardType.Text,
+                hasError = descriptionError != null
             )
+
+            // ✅ خطای فیلد توضیحات — زیر همان فیلد (مثل setError)
+            if (descriptionError != null) {
+                Text(
+                    text = "⚠️ $descriptionError",
+                    color = colors.delete,
+                    fontSize = 13.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 5.dp, start = 8.dp)
+                )
+            }
+
+            // ============ پیام خطا (داخل دیالوگ) ============
+            if (errorMessage != null) {
+                Text(
+                    text = "⚠️ $errorMessage",
+                    color = colors.delete,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(14.dp))
+            }
 
             Spacer(Modifier.height(26.dp))
 

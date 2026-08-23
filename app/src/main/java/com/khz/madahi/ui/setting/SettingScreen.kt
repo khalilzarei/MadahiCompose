@@ -2,7 +2,6 @@
 package com.khz.madahi.ui.setting
 
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,23 +10,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -36,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +70,7 @@ fun SettingScreen(
         bottomBarActions = bottomBarActions,
         title = "تنظیمات",
         subtitle = "",
+        isCategory = true,
         selectedBottomTab = BottomTab.SETTINGS,
         onHeaderBottonClicked = {},
     ) {
@@ -87,7 +80,7 @@ fun SettingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            contentAlignment = Alignment.Center
+//            contentAlignment = Alignment.Center
         ) {
 
             GlassCard3D {
@@ -200,87 +193,18 @@ fun SettingScreen(
                         }
                     }
 
-// ============ دیالوگ انتخاب فونت ============
+// ============ دیالوگ انتخاب فونت (طراحی شیشه‌ای سه‌بعدی) ============
                     if (showFontDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showFontDialog = false },
-                            title = {
-                                Text(
-                                    text = "انتخاب فونت",
-                                    fontFamily = FontCatalog.fontFamilyFor(currentFontKey)
-                                )
+                        FontDialog(
+                            currentFontKey = currentFontKey,
+                            onFontSelected = { key ->
+                                preferencesManager.font = key
+                                showFontDialog = false
+                                // 🔄 بازسازی اکتیویتی تا فونت کل اپ عوض شود
+                                (context as? ComponentActivity)?.recreate()
                             },
-                            text = {
-                                Column(
-                                    modifier = Modifier
-                                        .heightIn(max = 420.dp)
-                                        .verticalScroll(rememberScrollState())
-                                ) {
-                                    FontCatalog.availableFonts.forEach { (key, label) ->
-                                        val isSelected = key == currentFontKey
-                                        val fontFamily = FontCatalog.fontFamilyFor(key)
-                                        // نام تمیز بدون پرانتز (مثلاً «تیتر (عنوان)» → «تیتر»)
-                                        val shortName = label.substringBefore("(")
-                                            .trim()
-
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable {
-                                                    preferencesManager.font = key
-                                                    showFontDialog = false
-                                                    // 🔄 بازسازی اکتیویتی تا فونت کل اپ عوض شود
-                                                    (context as? ComponentActivity)?.recreate()
-                                                }
-                                                .background(
-                                                    color = if (isSelected) {
-                                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                                                    } else {
-                                                        Color.Transparent
-                                                    },
-                                                    shape = RoundedCornerShape(12.dp)
-                                                )
-                                                .padding(
-                                                    horizontal = 12.dp,
-                                                    vertical = 10.dp
-                                                ),
-                                            verticalAlignment = Alignment.CenterVertically) {
-                                            Row(modifier = Modifier.weight(1f)) {
-                                                // ۱) نام فونت — با فونت خودش، درشت
-                                                Text(
-                                                    text = label,
-                                                    fontFamily = fontFamily,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 17.sp,
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-                                                Spacer(modifier = Modifier.width(20.dp))
-                                                // ۲) جمله نمونه — با فونت خودش
-                                                Text(
-                                                    text = "این نمونه فونت $shortName است",
-                                                    fontFamily = fontFamily,
-                                                    fontSize = 13.sp,
-                                                    color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
-                                                )
-                                            }
-
-                                            // تیک فونت انتخابی
-                                            if (isSelected) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Check,
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            confirmButton = {
-                                TextButton(onClick = { showFontDialog = false }) {
-                                    Text("بستن")
-                                }
-                            })
+                            onDismiss = { showFontDialog = false }
+                        )
                     }
 
                     //endregion

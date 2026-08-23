@@ -103,6 +103,7 @@ fun FavoritesScreen(
         title = "علاقه مندی ها",
         subtitle = "",
         selectedBottomTab = BottomTab.FAVORITES,
+        isCategory = true,
         onHeaderBottonClicked = {},
     ) {
         Box(

@@ -7,6 +7,7 @@ import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.ContentRepository
 import com.khz.madahi.helper.GUEST_USER_ID
+import com.khz.madahi.helper.extention.cleanForServer
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
 import com.khz.madahi.utils.Result
@@ -47,6 +48,18 @@ class ContentViewModel(
 
     private val _isNoheh = MutableStateFlow(true)
     val isNoheh: StateFlow<Boolean> = _isNoheh.asStateFlow()
+
+    // ✅ خطای فیلد عنوان — زیر همان فیلد نمایش داده می‌شود (مثل setError)
+    private val _subjectError = MutableStateFlow<String?>(null)
+    val subjectError: StateFlow<String?> = _subjectError.asStateFlow()
+
+    // ✅ خطای فیلد متن — زیر همان فیلد نمایش داده می‌شود (مثل setError)
+    private val _contentError = MutableStateFlow<String?>(null)
+    val contentError: StateFlow<String?> = _contentError.asStateFlow()
+
+    // ✅ پیام خطای عمومی داخل دیالوگ (مثلاً خطای سرور)
+    private val _dialogMessage = MutableStateFlow<String?>(null)
+    val dialogMessage: StateFlow<String?> = _dialogMessage.asStateFlow()
 
     // ============ Init ============
     init {
@@ -133,6 +146,9 @@ class ContentViewModel(
         _dialogContent.value = ""
         _isNoheh.value = true
         _editingContent.value = null
+        _subjectError.value = null
+        _contentError.value = null
+        _dialogMessage.value = null
         _isDialogVisible.value = true
     }
 
@@ -142,16 +158,24 @@ class ContentViewModel(
         _dialogContent.value = content.content
         _isNoheh.value = content.contentType == "0"
         _editingContent.value = content
+        _subjectError.value = null
+        _contentError.value = null
+        _dialogMessage.value = null
         _isDialogVisible.value = true
     }
 
     fun hideDialog() {
         _isDialogVisible.value = false
         _editingContent.value = null
+        _subjectError.value = null
+        _contentError.value = null
+        _dialogMessage.value = null
     }
 
     fun updateSubject(subject: String) {
         _dialogSubject.value = subject
+        // ✅ هنگام تایپ، خطای فیلد پاک می‌شود (همان رفتار setError)
+        _subjectError.value = null
     }
 
     fun updateAnswer(answer: String) {
@@ -160,6 +184,8 @@ class ContentViewModel(
 
     fun updateContent(content: String) {
         _dialogContent.value = content
+        // ✅ هنگام تایپ، خطای فیلد پاک می‌شود (همان رفتار setError)
+        _contentError.value = null
     }
 
     fun updateContentType(isNoheh: Boolean) {
@@ -169,21 +195,21 @@ class ContentViewModel(
     // ============ Add/Edit/Delete Content ============
     fun addContent() {
         viewModelScope.launch {
-            val subject = _dialogSubject.value.trim()
-            val answer = _dialogAnswer.value.trim()
-            val contentText = _dialogContent.value.trim()
+            // ✅ حذف کاراکترهای ۴ بایتی (ایموجی و...) — سرور utf8mb3 است
+            val subject = _dialogSubject.value.cleanForServer()
+            val answer = _dialogAnswer.value.cleanForServer()
+            val contentText = _dialogContent.value.cleanForServer()
             val userId = preferencesManager.user?.id
                     ?: GUEST_USER_ID
             val categoryId = category?.id
                     ?: GUEST_USER_ID
 
-            if (subject.isEmpty()) {
-                _uiState.value = ContentUiState.Error("لطفاً عنوان را وارد کنید")
-                return@launch
-            }
-
-            if (contentText.isEmpty()) {
-                _uiState.value = ContentUiState.Error("لطفاً متن را وارد کنید")
+            // ✅ اعتبارسنجی هر دو فیلد هم‌زمان (هر خطا زیر همان فیلد نمایش داده می‌شود)
+            val subjectErr = if (subject.isEmpty()) "لطفاً عنوان را وارد کنید" else null
+            val contentErr = if (contentText.isEmpty()) "لطفاً متن را وارد کنید" else null
+            if (subjectErr != null || contentErr != null) {
+                _subjectError.value = subjectErr
+                _contentError.value = contentErr
                 return@launch
             }
 
@@ -216,7 +242,7 @@ class ContentViewModel(
                 is Result.Error   -> {
                     appDatabase.contentDAO()
                         .delete(tempContent)
-                    _uiState.value = ContentUiState.Error(result.message)
+                    _dialogMessage.value = result.message
                 }
 
                 is Result.Loading -> { /* ignore */
@@ -227,19 +253,19 @@ class ContentViewModel(
 
     fun editContent() {
         viewModelScope.launch {
-            val subject = _dialogSubject.value.trim()
-            val answer = _dialogAnswer.value.trim()
-            val contentText = _dialogContent.value.trim()
+            // ✅ حذف کاراکترهای ۴ بایتی (ایموجی و...) — سرور utf8mb3 است
+            val subject = _dialogSubject.value.cleanForServer()
+            val answer = _dialogAnswer.value.cleanForServer()
+            val contentText = _dialogContent.value.cleanForServer()
             val content = _editingContent.value
                     ?: return@launch
 
-            if (subject.isEmpty()) {
-                _uiState.value = ContentUiState.Error("لطفاً عنوان را وارد کنید")
-                return@launch
-            }
-
-            if (contentText.isEmpty()) {
-                _uiState.value = ContentUiState.Error("لطفاً متن را وارد کنید")
+            // ✅ اعتبارسنجی هر دو فیلد هم‌زمان (هر خطا زیر همان فیلد نمایش داده می‌شود)
+            val subjectErr = if (subject.isEmpty()) "لطفاً عنوان را وارد کنید" else null
+            val contentErr = if (contentText.isEmpty()) "لطفاً متن را وارد کنید" else null
+            if (subjectErr != null || contentErr != null) {
+                _subjectError.value = subjectErr
+                _contentError.value = contentErr
                 return@launch
             }
 
@@ -265,7 +291,7 @@ class ContentViewModel(
                 is Result.Error   -> {
                     appDatabase.contentDAO()
                         .update(content)
-                    _uiState.value = ContentUiState.Error(result.message)
+                    _dialogMessage.value = result.message
                 }
 
                 is Result.Loading -> { /* ignore */

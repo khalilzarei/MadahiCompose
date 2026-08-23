@@ -34,6 +34,18 @@ class CategoryViewModel(
     private val _editingCategory = MutableStateFlow<Category?>(null)
     val editingCategory: StateFlow<Category?> = _editingCategory.asStateFlow()
 
+    // ✅ خطای فیلد عنوان — زیر همان فیلد نمایش داده می‌شود (مثل setError)
+    private val _titleError = MutableStateFlow<String?>(null)
+    val titleError: StateFlow<String?> = _titleError.asStateFlow()
+
+    // ✅ خطای فیلد توضیحات — زیر همان فیلد نمایش داده می‌شود (مثل setError)
+    private val _descriptionError = MutableStateFlow<String?>(null)
+    val descriptionError: StateFlow<String?> = _descriptionError.asStateFlow()
+
+    // ✅ پیام خطای عمومی داخل دیالوگ (مثلاً خطای سرور)
+    private val _dialogMessage = MutableStateFlow<String?>(null)
+    val dialogMessage: StateFlow<String?> = _dialogMessage.asStateFlow()
+
     // ============ Dialog Data ============
     private val _dialogTitle = MutableStateFlow("")
     val dialogTitle: StateFlow<String> = _dialogTitle.asStateFlow()
@@ -85,6 +97,9 @@ class CategoryViewModel(
         _dialogTitle.value = ""
         _dialogDescription.value = ""
         _editingCategory.value = null
+        _titleError.value = null
+        _descriptionError.value = null
+        _dialogMessage.value = null
         _isDialogVisible.value = true
     }
 
@@ -92,6 +107,9 @@ class CategoryViewModel(
         _dialogTitle.value = category.title
         _dialogDescription.value = category.description
         _editingCategory.value = category
+        _titleError.value = null
+        _descriptionError.value = null
+        _dialogMessage.value = null
         _isDialogVisible.value = true
         logD("showEditCategoryDialog ${category.title}")
     }
@@ -101,14 +119,21 @@ class CategoryViewModel(
         _editingCategory.value = null
         _dialogTitle.value = ""
         _dialogDescription.value = ""
+        _titleError.value = null
+        _descriptionError.value = null
+        _dialogMessage.value = null
     }
 
     fun updateDialogTitle(title: String) {
         _dialogTitle.value = title
+        // ✅ هنگام تایپ، خطای فیلد پاک می‌شود (همان رفتار setError)
+        _titleError.value = null
     }
 
     fun updateDialogDescription(description: String) {
         _dialogDescription.value = description
+        // ✅ هنگام تایپ، خطای فیلد پاک می‌شود (همان رفتار setError)
+        _descriptionError.value = null
     }
 
     // ============ Add Category ============
@@ -117,8 +142,12 @@ class CategoryViewModel(
             val title = _dialogTitle.value.trim()
             val description = _dialogDescription.value.trim()
 
-            if (title.isEmpty()) {
-                _uiState.value = CategoryUiState.Error("لطفاً عنوان را وارد کنید")
+            // ✅ اعتبارسنجی هر دو فیلد هم‌زمان (هر خطا زیر همان فیلد)
+            val titleErr = if (title.isEmpty()) "لطفاً عنوان را وارد کنید" else null
+            val descriptionErr = if (description.isEmpty()) "لطفاً توضیحات را وارد کنید" else null
+            if (titleErr != null || descriptionErr != null) {
+                _titleError.value = titleErr
+                _descriptionError.value = descriptionErr
                 return@launch
             }
 
@@ -151,7 +180,7 @@ class CategoryViewModel(
                 }
 
                 is Result.Error   -> {
-                    _uiState.value = CategoryUiState.Error(result.message)
+                    _dialogMessage.value = result.message
                 }
 
                 is Result.Loading -> { /* ignore */
@@ -168,8 +197,12 @@ class CategoryViewModel(
             val category = _editingCategory.value
                     ?: return@launch
 
-            if (title.isEmpty()) {
-                _uiState.value = CategoryUiState.Error("لطفاً عنوان را وارد کنید")
+            // ✅ اعتبارسنجی هر دو فیلد هم‌زمان (هر خطا زیر همان فیلد)
+            val titleErr = if (title.isEmpty()) "لطفاً عنوان را وارد کنید" else null
+            val descriptionErr = if (description.isEmpty()) "لطفاً توضیحات را وارد کنید" else null
+            if (titleErr != null || descriptionErr != null) {
+                _titleError.value = titleErr
+                _descriptionError.value = descriptionErr
                 return@launch
             }
 
@@ -191,7 +224,7 @@ class CategoryViewModel(
                 }
 
                 is Result.Error   -> {
-                    _uiState.value = CategoryUiState.Error(result.message)
+                    _dialogMessage.value = result.message
                 }
 
                 is Result.Loading -> { /* ignore */

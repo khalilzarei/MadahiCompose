@@ -16,6 +16,9 @@ interface ContentDAO {
     @Query("SELECT * FROM table_name_content ORDER BY idContent DESC")
     suspend fun getAll(): List<Content>
 
+    @Query("SELECT COUNT(*) FROM table_name_content WHERE userId = :userId AND contentType = :contentType")
+    suspend fun countByUserIdAndType(userId: Int, contentType: String): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(content: Content)
 
