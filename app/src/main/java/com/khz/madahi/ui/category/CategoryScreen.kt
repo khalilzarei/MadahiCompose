@@ -41,6 +41,7 @@ import kotlinx.coroutines.launch
 fun CategoryScreen(
     onNavigateToContent: (Category) -> Unit,
     bottomBarActions: BottomBarActions,
+    onNavigateBack: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -74,7 +75,7 @@ fun CategoryScreen(
         title = "دسته بندی ها",
         subtitle = "",
         selectedBottomTab = BottomTab.CATEGORY,
-        onHeaderBottonClicked = {},
+        onHeaderBottonClicked = { onNavigateBack() },
         isCategory = true,
         onFabAddBottonClicked = {
             viewModel.showAddCategoryDialog()

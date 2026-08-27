@@ -2,6 +2,8 @@
 package com.khz.madahi.ui.contentdetail
 
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -23,10 +26,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -61,6 +67,7 @@ import com.khz.madahi.ui.components.Mini3DButton
 import com.khz.madahi.ui.components.ThreeDButton
 import com.khz.madahi.ui.components.TopTitleBar
 import com.khz.madahi.ui.content.DeleteContentDialog
+import com.khz.madahi.ui.poems.PremiumDialog
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
 import com.khz.madahi.ui.theme.border
@@ -140,9 +147,37 @@ fun ContentDetailScreen(
     }
 
     val favoriteState by viewModel.favoriteState.collectAsState()
+    val uploadState by viewModel.uploadState.collectAsState()
 
     // ============ وضعیت حذف ============
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // ============ وضعیت دیالوگ پرو (برای افزودن ویس) ============
+    var showPremiumDialog by remember { mutableStateOf(false) }
+
+    // ============ انتخاب فایل صوتی ============
+    val audioPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            viewModel.uploadAudio(
+                context,
+                content,
+                uri
+            )
+        }
+    }
+
+    fun requestAddAudio() {
+        viewModel.ensurePremium { isPro ->
+            if (isPro) {
+                audioPicker.launch(arrayOf("audio/*"))
+            } else {
+                showPremiumDialog = true
+            }
+        }
+    }
+
     var deleteError by remember { mutableStateOf<String?>(null) }
 
     // ============ اندازه فونت (ذخیره و بازیابی) ============
@@ -210,6 +245,7 @@ fun ContentDetailScreen(
         displayContent = displayContent,
         fontSize = fontSize,
         favoriteState = favoriteState,
+        uploadState = uploadState,
         onFontSizeChange = { saveFontSize(it) },
         onToggleFavorite = {
             viewModel.toggleFavorite(content) {
@@ -218,8 +254,9 @@ fun ContentDetailScreen(
         },
         onShare = onShare,
         onNavigateBack = onNavigateBack,
-        onDeleteClick = { showDeleteDialog = true }
-    )
+        onDeleteClick = { showDeleteDialog = true },
+        onAddAudioClick = { requestAddAudio() },
+        onClearUploadError = { viewModel.clearUploadState() })
 
     // ============ دیالوگ تأیید حذف ============
     if (showDeleteDialog) {
@@ -230,11 +267,20 @@ fun ContentDetailScreen(
                 viewModel.deleteContent(
                     content = content,
                     onSuccess = { onNavigateBack() },
-                    onError = { msg -> deleteError = msg }
-                )
+                    onError = { msg -> deleteError = msg })
             },
-            onDismiss = { showDeleteDialog = false }
-        )
+            onDismiss = { showDeleteDialog = false })
+    }
+
+    // ============ دیالوگ نسخه پرو (برای افزودن ویس) ============
+    if (showPremiumDialog) {
+        PremiumDialog(
+            onDismiss = { showPremiumDialog = false },
+            onActivated = {
+                showPremiumDialog = false
+                // بعد از فعال‌سازی، مستقیم فایل انتخاب کن
+                audioPicker.launch(arrayOf("audio/*"))
+            })
     }
 
     // ============ خطای حذف ============
@@ -247,8 +293,7 @@ fun ContentDetailScreen(
                 TextButton(onClick = { deleteError = null }) {
                     Text("تأیید")
                 }
-            }
-        )
+            })
     }
 }
 
@@ -262,11 +307,15 @@ fun ContentDetailScreenContent(
     displayContent: String,
     fontSize: Float,
     favoriteState: FavoriteState,
+    uploadState: UploadState = UploadState.Idle,
+    isReadOnly: Boolean = false,
     onFontSizeChange: (Float) -> Unit,
     onToggleFavorite: () -> Unit,
     onShare: () -> Unit,
     onNavigateBack: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onAddAudioClick: () -> Unit = {},
+    onClearUploadError: () -> Unit = {}
 ) {
     val colors = LocalMadahiColors.current
 
@@ -513,12 +562,32 @@ fun ContentDetailScreenContent(
                             },
                         )
 
-                        // ✏️ ویرایش — ورود به حالت ویرایش در همین صفحه
-                        Mini3DButton(
-                            imageVector = Icons.Default.Edit,
-                            tint = colors.gold,
-                            onClick = { startEditing() },
-                        )
+                        // ✏️ ویرایش — ورود به حالت ویرایش در همین صفحه (فقط دفترچه)
+                        if (!isReadOnly) {
+                            Mini3DButton(
+                                imageVector = Icons.Default.Edit,
+                                tint = colors.gold,
+                                onClick = { startEditing() },
+                            )
+                        }
+
+                        // 🎤 افزودن ویس/سبک — ویژه نسخه پرو (فقط دفترچه)
+                        // (اگر ویس داشته باشد رنگ عادی، وگرنه طلایی = قابل اضافه کردن)
+                        if (!isReadOnly) {
+                            Mini3DButton(
+                                imageVector = if (uploadState is UploadState.Uploading) {
+                                    Icons.Default.Stop
+                                } else {
+                                    Icons.Default.Mic
+                                },
+                                tint = if (content.audioUrl.isNullOrBlank()) {
+                                    colors.gold
+                                } else {
+                                    colors.textPrimary
+                                },
+                                onClick = onAddAudioClick
+                            )
+                        }
 
                         // علاقه‌مندی (قلب — با رنگ پویا)
                         GlassCard3D(
@@ -546,6 +615,60 @@ fun ContentDetailScreenContent(
                                 )
                             }
                         }
+                    }
+                }
+
+                // ============ وضعیت آپلود ویس ============
+                when (uploadState) {
+                    is UploadState.Uploading -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 24.dp,
+                                    vertical = 6.dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = colors.gold,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = "در حال آپلود ویس…",
+                                color = colors.textMuted,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+
+                    is UploadState.Error     -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onClearUploadError() }
+                                .padding(
+                                    horizontal = 24.dp,
+                                    vertical = 6.dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "⚠️ ${(uploadState as UploadState.Error).message}",
+                                color = colors.delete,
+                                fontSize = 13.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "بستن",
+                                color = colors.textMuted,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    else                     -> { /* Idle / Success */
                     }
                 }
             }

@@ -8,13 +8,15 @@ import androidx.room.RoomDatabase
 import com.khz.madahi.data.local.database.dao.CategoryDAO
 import com.khz.madahi.data.local.database.dao.ContentDAO
 import com.khz.madahi.data.local.database.dao.FavoriteDAO
+import com.khz.madahi.helper.DB_NAME
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
 import com.khz.madahi.models.Favorite
 
+// ⚠️ نسخه ۴: ستون poem_count به Category اضافه شد (کتابچه).
 @Database(
     entities = [Category::class, Content::class, Favorite::class],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -33,13 +35,14 @@ abstract class AppDatabase : RoomDatabase() {
                         val instance = Room.databaseBuilder(
                             context.applicationContext,
                             AppDatabase::class.java,
-                            "Madahi.db"
+                            DB_NAME
                         )
                             // ✅ allowMainThreadQueries() حذف شد.
                             // همه‌ی متدهای DAO الان suspend هستند و باید از
                             // یک CoroutineScope (مثل viewModelScope) فراخوانی شوند
                             // تا روی Dispatchers.IO اجرا شده و از ANR جلوگیری شود.
-                            .fallbackToDestructiveMigration(false) // ✅ جلوگیری از کرش هنگام تغییر schema بدون migration دستی
+                            // ✅ داده‌ها از سرور sync می‌شوند؛ با ارتقا schema، DB محلی از نو ساخته می‌شود
+                            .fallbackToDestructiveMigration(true)
                             .build()
                         INSTANCE = instance
                         instance

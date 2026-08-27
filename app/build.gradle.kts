@@ -35,6 +35,7 @@ android {
 
     buildFeatures {
         compose = true
+        aidl = true
         buildConfig = true  // ✅ این خط را اضافه کنید
     }
 }

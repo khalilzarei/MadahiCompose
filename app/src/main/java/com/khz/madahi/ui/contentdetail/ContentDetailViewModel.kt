@@ -1,16 +1,20 @@
 // ui/contentdetail/ContentDetailViewModel.kt
 package com.khz.madahi.ui.contentdetail
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.ContentRepository
+import com.khz.madahi.data.remote.repository.PremiumRepository
 import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.helper.extention.logD
 import com.khz.madahi.helper.extention.logE
 import com.khz.madahi.models.Content
 import com.khz.madahi.models.Favorite
+import com.khz.madahi.ui.poems.PremiumUiState
 import com.khz.madahi.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +24,8 @@ import kotlinx.coroutines.launch
 class ContentDetailViewModel(
     private val preferencesManager: PreferencesManager,
     private val contentRepository: ContentRepository,
-    private val appDatabase: AppDatabase
+    private val appDatabase: AppDatabase,
+    private val premiumRepository: PremiumRepository
 ) : ViewModel() {
 
     // ============ State ============
@@ -29,6 +34,14 @@ class ContentDetailViewModel(
 
     private val _favorite = MutableStateFlow<Favorite?>(null)
     val favorite: StateFlow<Favorite?> = _favorite.asStateFlow()
+
+    // وضعیت نسخه پرو (null = هنوز چک نشده)
+    private val _premiumState = MutableStateFlow<PremiumUiState?>(null)
+    val premiumState: StateFlow<PremiumUiState?> = _premiumState.asStateFlow()
+
+    // وضعیت آپلود ویس
+    private val _uploadState = MutableStateFlow<UploadState>(UploadState.Idle)
+    val uploadState: StateFlow<UploadState> = _uploadState.asStateFlow()
 
     fun loadFavoriteStatus(content: Content) {
         viewModelScope.launch {
@@ -265,8 +278,6 @@ class ContentDetailViewModel(
         }
     }
 
-    // ui/contentdetail/ContentDetailViewModel.kt
-
     // ============ Toggle Favorite ============
     fun toggleFavorite(
         content: Content,
@@ -308,8 +319,6 @@ class ContentDetailViewModel(
                     logD("toggleFavorite: ${result.message}")
 
                     // ✅ در صورت خطا، وضعیت قبلی را بازیابی کن
-                    val userId = preferencesManager.user?.id
-                            ?: GUEST_USER_ID
                     val existingFavorite = appDatabase.favoriteDAO()
                         .getFavorite(
                             content.id,
@@ -361,10 +370,107 @@ class ContentDetailViewModel(
                     onError(result.message)
                 }
 
-                is Result.Loading -> { /* ignore */ }
+                is Result.Loading -> { /* ignore */
+                }
             }
         }
     }
+
+    // ============ چک نسخه پرو (برای گیت کردن افزودن ویس) ============
+
+    /**
+     * وضعیت پرو را برمی‌گرداند؛ اگر قبلاً چک نشده، از سرور می‌گیرد.
+     * در صورت خطای ارتباط، true برمی‌گرداند (سرور در نهایت گیت نهایی است).
+     */
+    fun ensurePremium(onResult: (Boolean) -> Unit) {
+        val cached = _premiumState.value
+        if (cached is PremiumUiState.Pro) {
+            onResult(true)
+            return
+        }
+        if (cached is PremiumUiState.Guest) {
+            onResult(false)
+            return
+        }
+
+        viewModelScope.launch {
+            val userId = preferencesManager.user?.id
+                    ?: GUEST_USER_ID
+
+            when (val result = premiumRepository.getPremiumStatus(userId)) {
+                is Result.Success -> {
+                    val isPro = result.data.isPremium
+                    _premiumState.value = if (isPro) {
+                        PremiumUiState.Pro
+                    } else {
+                        PremiumUiState.Guest
+                    }
+                    onResult(isPro)
+                }
+
+                is Result.Error   -> {
+                    logD("ensurePremium: error ${result.message} — allow try")
+                    onResult(true)
+                }
+
+                is Result.Loading -> { /* ignore */
+                }
+            }
+        }
+    }
+
+    // ============ آپلود ویس/سبک (نسخه پرو) ============
+    fun uploadAudio(
+        context: Context,
+        content: Content,
+        uri: Uri
+    ) {
+        viewModelScope.launch {
+            _uploadState.value = UploadState.Uploading
+
+            val userId = preferencesManager.user?.id
+                    ?: GUEST_USER_ID
+
+            when (val result = contentRepository.uploadAudio(
+                context,
+                userId,
+                content,
+                uri
+            )) {
+                is Result.Success -> {
+                    // ✅ به‌روزرسانی ردیف محلی با audio_url جدید
+                    try {
+                        appDatabase.contentDAO()
+                            .update(result.data)
+                    } catch (e: Exception) {
+                        logE("uploadAudio: local update error $e")
+                    }
+                    _uploadState.value = UploadState.Success
+                    logD("uploadAudio: ✅ contentId=${content.id}")
+                }
+
+                is Result.Error   -> {
+                    _uploadState.value = UploadState.Error(result.message)
+                }
+
+                is Result.Loading -> { /* ignore */
+                }
+            }
+        }
+    }
+
+    fun clearUploadState() {
+        _uploadState.value = UploadState.Idle
+    }
+}
+
+// ============ States ============
+
+sealed class UploadState {
+    object Idle : UploadState()
+    object Uploading : UploadState()
+    object Success : UploadState()
+    data class Error(val message: String) : UploadState()
 }
 
 // ============ Favorite State ============

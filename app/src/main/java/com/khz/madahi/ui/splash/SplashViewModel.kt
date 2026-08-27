@@ -31,8 +31,6 @@ class SplashViewModel(
         viewModelScope.launch {
             _state.value = SplashState.Loading
 
-            // تاخیر کوتاه برای نمایش Splash
-//            delay(300.milliseconds)
 
             // ✅ بررسی اتصال اینترنت
             if (!networkChecker.isNetworkConnected()) {
@@ -41,19 +39,8 @@ class SplashViewModel(
                 return@launch
             }
 
-            // ✅ دریافت اطلاعات نسخه با timeout 4 ثانیه
-            val result = appInfoRepository.getAppInfo()
-//            val result = withTimeoutOrNull(3000.milliseconds) {
-//                appInfoRepository.getAppInfo()
-//            }
 
-            if (result == null) {
-                // اگر timeout شد، به صفحه بعد برو
-                navigateBasedOnUserState()
-                return@launch
-            }
-
-            when (result) {
+            when (val result = appInfoRepository.getAppInfo()) {
                 is Result.Success -> {
                     val appInfo = result.data
                     val currentVersion = BuildConfig.VERSION_CODE

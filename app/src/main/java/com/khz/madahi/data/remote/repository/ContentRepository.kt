@@ -1,6 +1,10 @@
 // data/remote/repository/ContentRepository.kt
 package com.khz.madahi.data.remote.repository
 
+import android.content.ContentResolver
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
 import com.khz.madahi.data.local.database.dao.ContentDAO
 import com.khz.madahi.data.local.database.dao.FavoriteDAO
@@ -8,6 +12,9 @@ import com.khz.madahi.data.remote.api.APIService
 import com.khz.madahi.models.Content
 import com.khz.madahi.models.Favorite
 import com.khz.madahi.utils.Result
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class ContentRepository(
     private val apiService: APIService,
@@ -411,7 +418,7 @@ class ContentRepository(
 
             // ✅ بر اساس action تصمیم بگیر
             when (action) {
-                "added"   -> {
+                "added" -> {
                     // ✅ اضافه شده
                     Log.d(
                         TAG,
@@ -433,7 +440,7 @@ class ContentRepository(
                     Result.Success(null)  // ✅ null برگردان یعنی حذف شده
                 }
 
-                else      -> {
+                else -> {
                     // ✅ اگر action مشخص نبود، بر اساس favorite تصمیم بگیر
                     if (favorite != null) {
                         favoriteDao.insert(favorite)
@@ -453,5 +460,100 @@ class ContentRepository(
             )
             Result.Error("خطا در ارتباط با سرور: ${e.message}")
         }
+    }
+
+    // ============ آپلود ویس/سبک (نسخه پرو) ============
+    suspend fun uploadAudio(
+        context: Context,
+        userId: Int,
+        content: Content,
+        uri: Uri
+    ): Result<Content> {
+        return try {
+            Log.d(
+                TAG,
+                "uploadAudio: contentId=${content.id}"
+            )
+
+            val fileName = queryFileName(
+                context.contentResolver,
+                uri
+            )
+                    ?: "audio.mp3"
+            val mimeType = context.contentResolver.getType(uri)
+                    ?: "audio/mp3"
+
+            val bytes = context.contentResolver.openInputStream(uri)
+                ?.use { it.readBytes() }
+                    ?: return Result.Error("خواندن فایل ممکن نبود")
+
+            if (bytes.isEmpty()) {
+                return Result.Error("فایل خالی است")
+            }
+
+            val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+            val part = MultipartBody.Part.createFormData(
+                "audio",
+                fileName,
+                requestBody
+            )
+
+            val response = apiService.uploadAudio(
+                userId.toString()
+                    .toRequestBody(),
+                content.id.toString()
+                    .toRequestBody(),
+                part
+            )
+
+            Log.d(
+                TAG,
+                "uploadAudio: response error=${response.error}"
+            )
+
+            if (response.error) {
+                val errorMsg = response.errorMsg
+                        ?: "خطا در آپلود ویس"
+                Log.e(
+                    TAG,
+                    "uploadAudio: server error=$errorMsg"
+                )
+                return Result.Error(errorMsg)
+            }
+
+            val uploaded = response.content
+                    ?: return Result.Error("پاسخ سرور ناقص است")
+
+            Result.Success(uploaded)
+
+        } catch (e: Exception) {
+            Log.e(
+                TAG,
+                "uploadAudio error",
+                e
+            )
+            Result.Error("خطا در ارتباط با سرور: ${e.message}")
+        }
+    }
+
+    /** دریافت نام فایل از Uri (بدون permission اضافی) */
+    private fun queryFileName(
+        resolver: ContentResolver,
+        uri: Uri
+    ): String? {
+        var name: String? = null
+        resolver.query(
+            uri,
+            null,
+            null,
+            null
+        )
+            ?.use { cursor ->
+                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (index >= 0 && cursor.moveToFirst()) {
+                    name = cursor.getString(index)
+                }
+            }
+        return name
     }
 }

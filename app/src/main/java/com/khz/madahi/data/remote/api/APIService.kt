@@ -1,14 +1,19 @@
 // data/remote/api/APIService.kt
 package com.khz.madahi.data.remote.api
 
+import com.khz.madahi.models.response.ActivatePremiumResponse
 import com.khz.madahi.models.response.AppInfoResponse
 import com.khz.madahi.models.response.CategoriesResponse
 import com.khz.madahi.models.response.CategoryResponse
 import com.khz.madahi.models.response.ContentResponse
+import com.khz.madahi.models.response.CreatePremiumInvoiceResponse
 import com.khz.madahi.models.response.DataResponse
 import com.khz.madahi.models.response.InsertFavoriteResponse
+import com.khz.madahi.models.response.LibraryCategoriesResponse
+import com.khz.madahi.models.response.LibraryContentsResponse
 import com.khz.madahi.models.response.LoginResponse
 import com.khz.madahi.models.response.MessageResponse
+import com.khz.madahi.models.response.PremiumStatusResponse
 import com.khz.madahi.models.response.ResultResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -149,5 +154,53 @@ interface APIService {
         @Part("user_id") userId: RequestBody,
         @Part("content_id") contentId: RequestBody,
         @Part audio: MultipartBody.Part
+    ): ContentResponse
+
+    // ============ Premium (نسخه پرو) ============
+    @FormUrlEncoded
+    @POST("getPremiumStatus.php")
+    suspend fun getPremiumStatus(@Field("user_id") userId: Int): PremiumStatusResponse
+
+    @FormUrlEncoded
+    @POST("activatePremiumBazaar.php")
+    suspend fun activatePremiumBazaar(
+        @Field("purchase_token") purchaseToken: String,
+        @Field("product_id") productId: String
+    ): ActivatePremiumResponse
+
+    @FormUrlEncoded
+    @POST("createPremiumInvoice.php")
+    suspend fun createPremiumInvoice(
+        @Field("user_id") userId: Int
+    ): CreatePremiumInvoiceResponse
+
+    // ============ شعرهای دارای سبک (نسخه پرو) ============
+    @FormUrlEncoded
+    @POST("getPoemsWithAudio.php")
+    suspend fun getPoemsWithAudio(
+        @Field("user_id") userId: Int
+    ): DataResponse
+
+    // ============ کتابچه (کتابخانه‌ی عمومی) ============
+    @FormUrlEncoded
+    @POST("getLibraryCategories.php")
+    suspend fun getLibraryCategories(
+        @Field("q") q: String,
+        @Field("page") page: Int,
+        @Field("limit") limit: Int
+    ): LibraryCategoriesResponse
+
+    @FormUrlEncoded
+    @POST("getLibraryContents.php")
+    suspend fun getLibraryContents(
+        @Field("category_id") categoryId: Int,
+        @Field("page") page: Int,
+        @Field("limit") limit: Int
+    ): LibraryContentsResponse
+
+    @FormUrlEncoded
+    @POST("getContentWithId.php")
+    suspend fun getContentWithId(
+        @Field("content_id") contentId: Int
     ): ContentResponse
 }

@@ -38,17 +38,7 @@ import com.khz.madahi.ui.theme.PrimaryGreenDark
 fun TestView() {
     Scaffold(
         topBar = {
-            TopBarView(
-                onSearchClick = {},
-                onSettingClick = {}) {
-                Text(
-                    text = "دفترجه مداحی",
-                    color = Color.White,
-                    fontSize = 28.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-            }
+        
         },
         floatingActionButton = {
 
@@ -86,9 +76,6 @@ fun TestView() {
         },
     ) {
 
-        ContentViewBorder() {
-
-        }
     }
 }
 

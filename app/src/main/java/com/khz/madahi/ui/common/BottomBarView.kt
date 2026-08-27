@@ -63,7 +63,9 @@ enum class BottomTab {
     CATEGORY,
     FAVORITES,
     SETTINGS,
-    ABOUT
+    ABOUT,
+    LIBRARY,
+    POEMS   // 🎧 صفحه شعر و سبک (در نوار پایین نمایش نمی‌گیرد؛ فقط برای هایلایت)
 }
 
 // ============================================================
@@ -79,6 +81,7 @@ data class BottomBarActions(
     val onProfileClick: () -> Unit = {},
     val onAboutClick: () -> Unit = {},
     val onMessageClick: () -> Unit = {},
+    val onPoemsClick: () -> Unit = {},
 )
 
 // ============================================================
