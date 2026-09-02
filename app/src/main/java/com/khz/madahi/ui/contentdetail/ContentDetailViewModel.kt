@@ -448,15 +448,19 @@ class ContentDetailViewModel(
                 durationSec
             )) {
                 is Result.Success -> {
-                    // ✅ به‌روزرسانی ردیف محلی با audio_url جدید
+                    // ✅ به‌روزرسانی فقط audio_url در دیتابیس محلی
+                    // (متد update قبلی کار نمی‌کرد چون result.data.idContent = 0 بود
+                    //  و Room با primary key idContent ردیف پیدا نمی‌کرد)
                     try {
+                        val audioUrl = result.data.audioUrl
                         appDatabase.contentDAO()
-                            .update(result.data)
+                            .updateAudioUrl(content.id, audioUrl)
+                        logD("uploadAudio: local DB updated via updateAudioUrl, audioUrl=$audioUrl")
                     } catch (e: Exception) {
                         logE("uploadAudio: local update error $e")
                     }
-                    _uploadState.value = UploadState.Success
-                    logD("uploadAudio: ✅ contentId=${content.id}")
+                    _uploadState.value = UploadState.Success(audioUrl = result.data.audioUrl)
+                    logD("uploadAudio: ✅ contentId=${content.id}, audioUrl=${result.data.audioUrl}")
 
                     // ✅ بررسی اینکه لینک برگشتی واقعاً کار می‌کند
                     val url = result.data.audioUrl
@@ -497,7 +501,7 @@ class ContentDetailViewModel(
 sealed class UploadState {
     object Idle : UploadState()
     object Uploading : UploadState()
-    object Success : UploadState()
+    data class Success(val audioUrl: String? = null) : UploadState()
     data class Error(val message: String) : UploadState()
 }
 

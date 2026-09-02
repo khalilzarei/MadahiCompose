@@ -8,12 +8,15 @@ import androidx.room.RoomDatabase
 import com.khz.madahi.data.local.database.dao.CategoryDAO
 import com.khz.madahi.data.local.database.dao.ContentDAO
 import com.khz.madahi.data.local.database.dao.FavoriteDAO
+import com.khz.madahi.helper.DB_NAME
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
 import com.khz.madahi.models.Favorite
 
 // ⚠️ نسخه ۴: داده‌های محلی کش هستند؛ همه‌چیز از سرور sync می‌شود.
-// (نسخه را تغییر نده مگر اینکه Migration مناسب تعریف کنی)
+// نسخه‌های ۲→۴ به‌دلیل تغییرات گسترده نوع ستون‌ها (String → Int)
+// با fallbackToDestructiveMigration ارتقا یافته‌اند.
+// از نسخه ۴ به بعد، هر تغییر schema باید Migration مشخص داشته باشد.
 @Database(
     entities = [Category::class, Content::class, Favorite::class],
     version = 4,
@@ -35,13 +38,15 @@ abstract class AppDatabase : RoomDatabase() {
                         val instance = Room.databaseBuilder(
                             context.applicationContext,
                             AppDatabase::class.java,
-                            "Madahi.db"
+                            DB_NAME
                         )
                             // ✅ allowMainThreadQueries() حذف شد.
                             // همه‌ی متدهای DAO الان suspend هستند و باید از
                             // یک CoroutineScope (مثل viewModelScope) فراخوانی شوند
                             // تا روی Dispatchers.IO اجرا شده و از ANR جلوگیری شود.
-                            // ✅ داده‌ها از سرور sync می‌شوند؛ با ارتقا schema، DB محلی از نو ساخته می‌شود
+                            // ✅ Migrationهای شناخته‌شده اعمال می‌شوند.
+                            // fallbackToDestructiveMigration فقط برای ارتقاهای
+                            // ناشناخته (جهش نسخه بدون Migration) فعال است.
                             .fallbackToDestructiveMigration(true)
                             .build()
                         INSTANCE = instance

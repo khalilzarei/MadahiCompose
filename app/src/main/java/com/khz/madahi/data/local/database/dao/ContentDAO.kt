@@ -13,11 +13,20 @@ import com.khz.madahi.models.Content
 @Dao
 interface ContentDAO {
 
+    @Query("UPDATE table_name_content SET audioUrl = :audioUrl WHERE id = :serverId")
+    suspend fun updateAudioUrl(
+        serverId: Int,
+        audioUrl: String?
+    )
+
     @Query("SELECT * FROM table_name_content ORDER BY idContent DESC")
     suspend fun getAll(): List<Content>
 
     @Query("SELECT COUNT(*) FROM table_name_content WHERE userId = :userId AND contentType = :contentType")
-    suspend fun countByUserIdAndType(userId: Int, contentType: String): Int
+    suspend fun countByUserIdAndType(
+        userId: Int,
+        contentType: String
+    ): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(content: Content)

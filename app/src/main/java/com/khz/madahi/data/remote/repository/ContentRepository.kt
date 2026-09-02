@@ -345,9 +345,12 @@ class ContentRepository(
                 "removeFavorite: userId=$userId, contentId=$contentId"
             )
 
-            val response = apiService.insertFavorite(
-                userId,
-                contentId
+            // ✅ باگ قبلی: از insertFavorite() استفاده می‌شد که در واقع
+            //    فیوریت را دوباره اضافه می‌کرد! الان از toggleFavorite
+            //    (همان اندپوینت سرور ولی با پارامترهای درست) استفاده می‌شود
+            val response = apiService.toggleFavorite(
+                contentId,
+                userId
             )
 
             Log.d(
@@ -365,17 +368,26 @@ class ContentRepository(
                 return Result.Error(errorMsg)
             }
 
-            val favorite = response.favorite
-            if (favorite == null) {
-                Log.d(
-                    TAG,
-                    "removeFavorite: successfully removed from server ✅"
-                )
-            } else {
-                Log.d(
-                    TAG,
-                    "removeFavorite: favorite returned from server (maybe added again?)"
-                )
+            when (response.action) {
+                "removed" -> {
+                    Log.d(
+                        TAG,
+                        "removeFavorite: removed from server ✅"
+                    )
+                }
+                "added" -> {
+                    // سرور فیوریت را مجدداً اضافه کرد (ممکن است سرور toggle کند)
+                    Log.w(
+                        TAG,
+                        "removeFavorite: server re-added favorite, removing from local DB anyway"
+                    )
+                }
+                else -> {
+                    Log.d(
+                        TAG,
+                        "removeFavorite: action=${response.action}"
+                    )
+                }
             }
 
             favoriteDao.deleteByContentId(contentId)
@@ -670,26 +682,7 @@ class ContentRepository(
         }
     }
 
-    private fun queryFileName(
-        resolver: ContentResolver,
-        uri: Uri
-    ): String? {
-        var name: String? = null
-        resolver.query(
-            uri,
-            null,
-            null,
-            null,
-            null
-        )
-            ?.use { cursor ->
-                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (index >= 0 && cursor.moveToFirst()) {
-                    name = cursor.getString(index)
-                }
-            }
-        return name
-    }
+
 
     private fun mimeFromExtension(fileName: String): String {
         val ext = fileName.substringAfterLast(
