@@ -202,7 +202,8 @@ fun SettingScreen(
                                 // 🔄 بازسازی اکتیویتی تا فونت کل اپ عوض شود
                                 (context as? ComponentActivity)?.recreate()
                             },
-                            onDismiss = { showFontDialog = false })
+                            onDismiss = { showFontDialog = false }
+                        )
                     }
 
                     //endregion
@@ -291,46 +292,6 @@ fun SettingScreen(
                         thickness = DividerDefaults.Thickness,
                         color = MaterialTheme.colorScheme.outline
                     )
-
-                    //region ✅ شعر و سبک (نسخه پرو)
-                    GlassCard3D {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { bottomBarActions.onPoemsClick() }
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "🎧",
-                                    fontSize = 22.sp
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "شعر و سبک (پرو)",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-
-                            Icon(
-                                imageVector = Icons.Default.ArrowBackIosNew,
-                                contentDescription = null,
-                                tint = colors.gold,
-                            )
-                        }
-                    }
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(20.dp),
-                        thickness = DividerDefaults.Thickness,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-
-                    //endregion
 
                     GlassCard3D {
                         Row(

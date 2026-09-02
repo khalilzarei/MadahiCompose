@@ -27,11 +27,7 @@ import com.khz.madahi.ui.content.ContentScreen
 import com.khz.madahi.ui.contentdetail.ContentDetailScreen
 import com.khz.madahi.ui.favorite.FavoritesScreen
 import com.khz.madahi.ui.intro.IntroScreen
-import com.khz.madahi.ui.library.LibraryCategoryScreen
-import com.khz.madahi.ui.library.LibraryDetailScreen
-import com.khz.madahi.ui.library.LibraryScreen
 import com.khz.madahi.ui.login.LoginScreen
-import com.khz.madahi.ui.menu.MenuScreen
 import com.khz.madahi.ui.message.MessageScreen
 import com.khz.madahi.ui.poems.PoemsScreen
 import com.khz.madahi.ui.profile.ProfileScreen
@@ -65,17 +61,6 @@ sealed class Screen(val route: String) {
     object FavoritesScreen : Screen("favorites")
     object ProfileScreen : Screen("profile")
     object PoemsScreen : Screen("poems")   // 🎧 شعر و سبک (نسخه پرو)
-    object MenuScreen : Screen("menu")
-
-    // 📚 کتابچه (کتابخانه‌ی عمومی)
-    object LibraryScreen : Screen("library")
-    object LibraryCategory : Screen("library/{categoryId}") {
-        fun passCategory(categoryId: Int): String = "library/$categoryId"
-    }
-
-    object LibraryDetail : Screen("libraryDetail/{contentId}") {
-        fun passContent(contentId: Int): String = "libraryDetail/$contentId"
-    }
 }
 
 @Composable
@@ -136,7 +121,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToCategory = {
-                    navController.navigate(Screen.MenuScreen.route) {
+                    navController.navigate(Screen.CategoryScreen.route) {
                         popUpTo(Screen.SplashScreen.route) { inclusive = true }
                     }
                 })
@@ -151,7 +136,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToCategory = {
-                    navController.navigate(Screen.MenuScreen.route) {
+                    navController.navigate(Screen.CategoryScreen.route) {
                         popUpTo(Screen.IntroScreen.route) { inclusive = true }
                     }
                 })
@@ -161,61 +146,10 @@ fun NavGraph(
         composable(Screen.LoginScreen.route) {
             LoginScreen(
                 onNavigateToCategory = {
-                    navController.navigate(Screen.MenuScreen.route) {
+                    navController.navigate(Screen.CategoryScreen.route) {
                         popUpTo(Screen.LoginScreen.route) { inclusive = true }
                     }
                 })
-        }
-
-        // ============ Menu (منوی اصلی بعد از لاگین) ============
-        composable(Screen.MenuScreen.route) {
-            MenuScreen(
-                onNavigateToDaftarkeh = {
-                    navController.navigate(Screen.CategoryScreen.route)
-                },
-                onNavigateToKtabeh = {
-                    navController.navigate(Screen.LibraryScreen.route)
-                })
-        }
-
-        // ============ 📚 کتابچه — دسته‌ها ============
-        composable(Screen.LibraryScreen.route) {
-            LibraryScreen(
-                bottomBarActions = bottomBarActions,
-                onNavigateBack = { navController.popBackStack() },
-                onCategoryClick = { categoryId ->
-                    navController.navigate(Screen.LibraryCategory.passCategory(categoryId))
-                })
-        }
-
-        // ============ 📚 کتابچه — اشعار یک دسته ============
-        composable(
-            Screen.LibraryCategory.route,
-            arguments = listOf(
-                navArgument("categoryId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val categoryId = backStackEntry.arguments?.getInt("categoryId")
-                    ?: 0
-            LibraryCategoryScreen(
-                bottomBarActions = bottomBarActions,
-                categoryId = categoryId,
-                onNavigateBack = { navController.popBackStack() },
-                onPoemClick = { contentId ->
-                    navController.navigate(Screen.LibraryDetail.passContent(contentId))
-                })
-        }
-
-        // ============ 📚 کتابچه — جزئیات شعر ============
-        composable(
-            Screen.LibraryDetail.route,
-            arguments = listOf(
-                navArgument("contentId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val contentId = backStackEntry.arguments?.getInt("contentId")
-                    ?: 0
-            LibraryDetailScreen(
-                contentId = contentId,
-                onNavigateBack = { navController.popBackStack() })
         }
 
         // ============ Category ============

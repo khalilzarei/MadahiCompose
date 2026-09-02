@@ -14,6 +14,7 @@ composeBom = "2026.06.01"
 ksp = "2.3.10"
 
 materialVersion = "1.11.4"
+media3Exoplayer = "1.11.0"
 navigationCompose = "2.9.8"
 material = "1.14.0"
 room = "2.8.4"
@@ -25,12 +26,14 @@ coroutines = "1.11.0"
 aestheticDialogs = "1.3.6"
 uiGraphics = "1.11.4"
 ui = "1.11.2"
+smartException = "0.2.1"
 
 [libraries]
 # (بدون تغییر - همون قبلی خوبه)
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+smart-exception-java = { group = "com.arthenica", name = "smart-exception-java", version.ref = "smartException" }
 androidx-material = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
 kotlin-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 

@@ -2,6 +2,7 @@
 package com.khz.madahi.ui.contentdetail
 
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -58,7 +59,10 @@ import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.api.RetrofitClient
 import com.khz.madahi.data.remote.repository.ContentRepository
 import com.khz.madahi.models.Content
+import com.khz.madahi.ui.audio.AddVoiceDialog
+import com.khz.madahi.ui.audio.VoicePlayerCard
 import com.khz.madahi.ui.components.Delete3DButton
+import com.khz.madahi.ui.poems.PremiumDialog
 import com.khz.madahi.ui.components.GlassCard3D
 import com.khz.madahi.ui.components.GlassTextField
 import com.khz.madahi.ui.components.Gold3DButton
@@ -67,7 +71,6 @@ import com.khz.madahi.ui.components.Mini3DButton
 import com.khz.madahi.ui.components.ThreeDButton
 import com.khz.madahi.ui.components.TopTitleBar
 import com.khz.madahi.ui.content.DeleteContentDialog
-import com.khz.madahi.ui.poems.PremiumDialog
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
 import com.khz.madahi.ui.theme.border
@@ -148,6 +151,7 @@ fun ContentDetailScreen(
 
     val favoriteState by viewModel.favoriteState.collectAsState()
     val uploadState by viewModel.uploadState.collectAsState()
+    val audioUrlMessage by viewModel.audioUrlMessage.collectAsState()
 
     // ============ وضعیت حذف ============
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -155,30 +159,50 @@ fun ContentDetailScreen(
     // ============ وضعیت دیالوگ پرو (برای افزودن ویس) ============
     var showPremiumDialog by remember { mutableStateOf(false) }
 
+    // ============ وضعیت دیالوگ افزودن ویس (ضبط/انتخاب + پیش‌نمایش + ارسال) ============
+    var showAddVoiceDialog by remember { mutableStateOf(false) }
+
     // ============ انتخاب فایل صوتی ============
     val audioPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            viewModel.uploadAudio(
-                context,
-                content,
-                uri
-            )
+            viewModel.uploadAudio(context, content, uri)
         }
     }
 
     fun requestAddAudio() {
         viewModel.ensurePremium { isPro ->
             if (isPro) {
-                audioPicker.launch(arrayOf("audio/*"))
+                // دیالوگ جدید: ضبط از میکروفون یا انتخاب از حافظه + پیش‌نمایش + ارسال
+                showAddVoiceDialog = true
             } else {
                 showPremiumDialog = true
             }
         }
     }
-
     var deleteError by remember { mutableStateOf<String?>(null) }
+
+    // ✅ محتوا به‌روز — بعد از آپلود موفق، audio_url تازه می‌شود و پلیر ویس نمایش داده می‌شود
+    var currentContent by remember { mutableStateOf(content) }
+
+    LaunchedEffect(content.id) {
+        currentContent = content
+    }
+
+    LaunchedEffect(uploadState) {
+        if (uploadState is UploadState.Success) {
+            try {
+                val fresh = AppDatabase.getInstance(context)
+                    .contentDAO()
+                    .getById(content.id)
+                if (fresh != null) {
+                    currentContent = fresh
+                }
+            } catch (_: Exception) {
+            }
+        }
+    }
 
     // ============ اندازه فونت (ذخیره و بازیابی) ============
     var fontSize by remember {
@@ -191,7 +215,7 @@ fun ContentDetailScreen(
     }
 
     // ============ متن نمایشی (پاک‌سازی تگ‌ها) ============
-    val displayContent = content.content.replace(
+    val displayContent = currentContent.content.replace(
         "<p>",
         ""
     )
@@ -220,8 +244,8 @@ fun ContentDetailScreen(
             putExtra(
                 Intent.EXTRA_TEXT,
                 """
-                📖 ${content.subject}
-                ﷺ ${content.answer}
+                📖 ${currentContent.subject}
+                ﷺ ${currentContent.answer}
 
                 $displayContent
 
@@ -241,11 +265,12 @@ fun ContentDetailScreen(
 
     // ============ UI (stateless) ============
     ContentDetailScreenContent(
-        content = content,
+        content = currentContent,
         displayContent = displayContent,
         fontSize = fontSize,
         favoriteState = favoriteState,
         uploadState = uploadState,
+        audioUrlMessage = audioUrlMessage,
         onFontSizeChange = { saveFontSize(it) },
         onToggleFavorite = {
             viewModel.toggleFavorite(content) {
@@ -256,7 +281,8 @@ fun ContentDetailScreen(
         onNavigateBack = onNavigateBack,
         onDeleteClick = { showDeleteDialog = true },
         onAddAudioClick = { requestAddAudio() },
-        onClearUploadError = { viewModel.clearUploadState() })
+        onClearUploadError = { viewModel.clearUploadState() }
+    )
 
     // ============ دیالوگ تأیید حذف ============
     if (showDeleteDialog) {
@@ -267,9 +293,11 @@ fun ContentDetailScreen(
                 viewModel.deleteContent(
                     content = content,
                     onSuccess = { onNavigateBack() },
-                    onError = { msg -> deleteError = msg })
+                    onError = { msg -> deleteError = msg }
+                )
             },
-            onDismiss = { showDeleteDialog = false })
+            onDismiss = { showDeleteDialog = false }
+        )
     }
 
     // ============ دیالوگ نسخه پرو (برای افزودن ویس) ============
@@ -278,9 +306,24 @@ fun ContentDetailScreen(
             onDismiss = { showPremiumDialog = false },
             onActivated = {
                 showPremiumDialog = false
-                // بعد از فعال‌سازی، مستقیم فایل انتخاب کن
-                audioPicker.launch(arrayOf("audio/*"))
-            })
+                // بعد از فعال‌سازی، مستقیم دیالوگ افزودن ویس را باز کن
+                showAddVoiceDialog = true
+            }
+        )
+    }
+
+    // ============ دیالوگ افزودن ویس (ضبط/انتخاب + پیش‌نمایش + ارسال) ============
+    if (showAddVoiceDialog) {
+
+        AddVoiceDialog(
+            content = content,
+            onSend = { uri ->
+                showAddVoiceDialog = false
+                // آپلود با کد موجود ViewModel — وضعیتش توی پایین صفحه نمایش داده می‌شود
+                viewModel.uploadAudio(context, content, uri)
+            },
+            onDismiss = { showAddVoiceDialog = false }
+        )
     }
 
     // ============ خطای حذف ============
@@ -293,7 +336,8 @@ fun ContentDetailScreen(
                 TextButton(onClick = { deleteError = null }) {
                     Text("تأیید")
                 }
-            })
+            }
+        )
     }
 }
 
@@ -308,6 +352,7 @@ fun ContentDetailScreenContent(
     fontSize: Float,
     favoriteState: FavoriteState,
     uploadState: UploadState = UploadState.Idle,
+    audioUrlMessage: String? = null,
     isReadOnly: Boolean = false,
     onFontSizeChange: (Float) -> Unit,
     onToggleFavorite: () -> Unit,
@@ -515,6 +560,14 @@ fun ContentDetailScreenContent(
 
                 Spacer(Modifier.height(16.dp))
 
+                // ============ 🎧 پلیر ویس — فقط اگر شعر ویس دارد ============
+                if (!content.audioUrl.isNullOrBlank()) {
+                    VoicePlayerCard(
+                        audioUrl = content.audioUrl!!
+                    )
+                    Spacer(Modifier.height(10.dp))
+                }
+
                 // ============ نوار دکمه‌ها — پایین صفحه ============
                 GlassCard3D(
                     modifier = Modifier
@@ -624,10 +677,7 @@ fun ContentDetailScreenContent(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(
-                                    horizontal = 24.dp,
-                                    vertical = 6.dp
-                                ),
+                                .padding(horizontal = 24.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             CircularProgressIndicator(
@@ -644,16 +694,14 @@ fun ContentDetailScreenContent(
                         }
                     }
 
-                    is UploadState.Error     -> {
+                    is UploadState.Error -> {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onClearUploadError() }
-                                .padding(
-                                    horizontal = 24.dp,
-                                    vertical = 6.dp
-                                ),
-                            verticalAlignment = Alignment.CenterVertically) {
+                                .padding(horizontal = 24.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 text = "⚠️ ${(uploadState as UploadState.Error).message}",
                                 color = colors.delete,
@@ -668,8 +716,23 @@ fun ContentDetailScreenContent(
                         }
                     }
 
-                    else                     -> { /* Idle / Success */
-                    }
+                    else -> { /* Idle / Success */ }
+                }
+
+                // ============ نتیجه‌ی بررسی لینک فایل ============
+                if (!audioUrlMessage.isNullOrBlank()) {
+                    Text(
+                        text = audioUrlMessage!!,
+                        color = if (audioUrlMessage!!.startsWith("⚠️")) {
+                            colors.delete
+                        } else {
+                            colors.textMuted
+                        },
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 4.dp)
+                    )
                 }
             }
 

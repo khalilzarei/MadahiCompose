@@ -9,8 +9,6 @@ import com.khz.madahi.models.response.ContentResponse
 import com.khz.madahi.models.response.CreatePremiumInvoiceResponse
 import com.khz.madahi.models.response.DataResponse
 import com.khz.madahi.models.response.InsertFavoriteResponse
-import com.khz.madahi.models.response.LibraryCategoriesResponse
-import com.khz.madahi.models.response.LibraryContentsResponse
 import com.khz.madahi.models.response.LoginResponse
 import com.khz.madahi.models.response.MessageResponse
 import com.khz.madahi.models.response.PremiumStatusResponse
@@ -153,6 +151,10 @@ interface APIService {
     suspend fun uploadAudio(
         @Part("user_id") userId: RequestBody,
         @Part("content_id") contentId: RequestBody,
+        // محدوده‌ی کات (ثانیه) — سرور برش را انجام می‌دهد
+        // -1 = بدون برش (فایل کامل ارسال می‌شود)
+        @Part("start_sec") startSec: RequestBody,
+        @Part("duration_sec") durationSec: RequestBody,
         @Part audio: MultipartBody.Part
     ): ContentResponse
 
@@ -180,27 +182,4 @@ interface APIService {
     suspend fun getPoemsWithAudio(
         @Field("user_id") userId: Int
     ): DataResponse
-
-    // ============ کتابچه (کتابخانه‌ی عمومی) ============
-    @FormUrlEncoded
-    @POST("getLibraryCategories.php")
-    suspend fun getLibraryCategories(
-        @Field("q") q: String,
-        @Field("page") page: Int,
-        @Field("limit") limit: Int
-    ): LibraryCategoriesResponse
-
-    @FormUrlEncoded
-    @POST("getLibraryContents.php")
-    suspend fun getLibraryContents(
-        @Field("category_id") categoryId: Int,
-        @Field("page") page: Int,
-        @Field("limit") limit: Int
-    ): LibraryContentsResponse
-
-    @FormUrlEncoded
-    @POST("getContentWithId.php")
-    suspend fun getContentWithId(
-        @Field("content_id") contentId: Int
-    ): ContentResponse
 }

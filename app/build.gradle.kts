@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.khz.madahi"
-        minSdk = 23
+        minSdk = 26
         targetSdk = 37
         versionCode = 7
         versionName = "1.7"
@@ -35,8 +35,8 @@ android {
 
     buildFeatures {
         compose = true
-        aidl = true
         buildConfig = true  // ✅ این خط را اضافه کنید
+        aidl = true          // ✅ فعال‌سازی AIDL برای سرویس پرداخت بازار
     }
 }
 
@@ -82,6 +82,7 @@ dependencies {
 
     implementation(libs.aesthetic.dialogs)
 
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -91,8 +92,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.androidx.core.splashscreen)
 
-
+    implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.material)
+    implementation(libs.smart.exception.java)
 }
 
 ksp {

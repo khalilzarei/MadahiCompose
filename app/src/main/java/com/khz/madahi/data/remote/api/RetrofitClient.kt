@@ -28,11 +28,12 @@ object RetrofitClient {
                 TimeUnit.SECONDS
             )
             .readTimeout(
-                30,
+                60,
                 TimeUnit.SECONDS
             )
+            // آپلود ویس تا ۱۵ مگابایت (پیش از برش) روی شبکه‌های کند زمان می‌برد
             .writeTimeout(
-                30,
+                120,
                 TimeUnit.SECONDS
             )
             .retryOnConnectionFailure(true)
@@ -56,6 +57,10 @@ object RetrofitClient {
             }
             .build()
     }
+
+    /** کلاینت عمومی برای درخواست‌های غیر-Retrofit (مثل بررسی لینک فایل) */
+    val httpClient: OkHttpClient
+        get() = client
 
     private val retrofit: Retrofit by lazy {
         val gson = GsonBuilder().setLenient()

@@ -1,4 +1,3 @@
-// data/remote/repository/ContentRepository.kt
 package com.khz.madahi.data.remote.repository
 
 import android.content.ContentResolver
@@ -12,8 +11,10 @@ import com.khz.madahi.data.remote.api.APIService
 import com.khz.madahi.models.Content
 import com.khz.madahi.models.Favorite
 import com.khz.madahi.utils.Result
+import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
 class ContentRepository(
@@ -26,7 +27,10 @@ class ContentRepository(
         private const val TAG = "ContentRepository"
     }
 
-    // ============ Get Contents ============
+    private fun createTextPart(value: String): RequestBody {
+        return value.toRequestBody("text/plain".toMediaTypeOrNull())
+    }
+
     suspend fun getContents(
         categoryId: Int,
         userId: Int
@@ -91,7 +95,6 @@ class ContentRepository(
         }
     }
 
-    // ============ Add Content ============
     suspend fun addContent(content: Content): Result<Content> {
         return try {
             Log.d(
@@ -150,7 +153,6 @@ class ContentRepository(
         }
     }
 
-    // ============ Update Content ============
     suspend fun updateContent(content: Content): Result<Content> {
         return try {
             Log.d(
@@ -199,7 +201,6 @@ class ContentRepository(
         }
     }
 
-    // ============ Delete Content ============
     suspend fun deleteContent(
         userId: Int,
         contentId: Int
@@ -248,7 +249,37 @@ class ContentRepository(
         }
     }
 
-    // ============ Add Favorite (suspend - بدون Call) ============
+    suspend fun getFavorites(userId: Int): Result<List<Content>> {
+        return try {
+            Log.d(
+                TAG,
+                "getFavorites: userId=$userId"
+            )
+
+            val response = apiService.getUserFavorites(userId)
+
+            if (response.error) {
+                return Result.Error(
+                    response.errorMsg
+                            ?: "خطا در دریافت علاقه‌مندی‌ها"
+                )
+            }
+
+            Result.Success(
+                response.contents?.filterNotNull()
+                        ?: emptyList()
+            )
+
+        } catch (e: Exception) {
+            Log.e(
+                TAG,
+                "getFavorites error",
+                e
+            )
+            Result.Error("خطا در ارتباط با سرور: ${e.message}")
+        }
+    }
+
     suspend fun addFavorite(
         userId: Int,
         contentId: Int
@@ -259,7 +290,6 @@ class ContentRepository(
                 "addFavorite: userId=$userId, contentId=$contentId"
             )
 
-            // ✅ suspend - مستقیماً InsertFavoriteResponse برمی‌گرداند
             val response = apiService.insertFavorite(
                 userId,
                 contentId
@@ -305,7 +335,6 @@ class ContentRepository(
         }
     }
 
-    // ============ Remove Favorite ============
     suspend fun removeFavorite(
         userId: Int,
         contentId: Int
@@ -316,8 +345,6 @@ class ContentRepository(
                 "removeFavorite: userId=$userId, contentId=$contentId"
             )
 
-            // ✅ از همان API insertFavorite استفاده می‌کنیم
-            // سرور خودش تشخیص می‌دهد که اگر وجود داشته باشد حذف کند
             val response = apiService.insertFavorite(
                 userId,
                 contentId
@@ -338,8 +365,6 @@ class ContentRepository(
                 return Result.Error(errorMsg)
             }
 
-            // ✅ اگر favorite برگردانده شد یعنی اضافه شده، اما ما می‌خواهیم حذف کنیم
-            // پس اگر favorite null بود یعنی حذف شده است
             val favorite = response.favorite
             if (favorite == null) {
                 Log.d(
@@ -353,7 +378,6 @@ class ContentRepository(
                 )
             }
 
-            // ✅ حذف از دیتابیس محلی
             favoriteDao.deleteByContentId(contentId)
             Log.d(
                 TAG,
@@ -372,9 +396,6 @@ class ContentRepository(
         }
     }
 
-    // data/remote/repository/ContentRepository.kt
-
-    // ============ Toggle Favorite (اضافه/حذف) ============
     suspend fun toggleFavorite(
         userId: Int,
         contentId: Int
@@ -416,10 +437,8 @@ class ContentRepository(
             val favorite = response.favorite
             val action = response.action
 
-            // ✅ بر اساس action تصمیم بگیر
             when (action) {
                 "added" -> {
-                    // ✅ اضافه شده
                     Log.d(
                         TAG,
                         "toggleFavorite: added ✅"
@@ -431,17 +450,15 @@ class ContentRepository(
                 }
 
                 "removed" -> {
-                    // ✅ حذف شده
                     Log.d(
                         TAG,
                         "toggleFavorite: removed ✅"
                     )
                     favoriteDao.deleteByContentId(contentId)
-                    Result.Success(null)  // ✅ null برگردان یعنی حذف شده
+                    Result.Success(null)
                 }
 
                 else -> {
-                    // ✅ اگر action مشخص نبود، بر اساس favorite تصمیم بگیر
                     if (favorite != null) {
                         favoriteDao.insert(favorite)
                         Result.Success(favorite)
@@ -462,12 +479,13 @@ class ContentRepository(
         }
     }
 
-    // ============ آپلود ویس/سبک (نسخه پرو) ============
     suspend fun uploadAudio(
         context: Context,
         userId: Int,
         content: Content,
-        uri: Uri
+        uri: Uri,
+        startSec: Double = -1.0,
+        durationSec: Double = -1.0
     ): Result<Content> {
         return try {
             Log.d(
@@ -475,40 +493,43 @@ class ContentRepository(
                 "uploadAudio: contentId=${content.id}"
             )
 
-            val fileName = queryFileName(
-                context.contentResolver,
+            // ۱) نام فایل واقعی (برای فایل ضبطشده، از path استخراج میشود)
+            val fileName = resolveFileName(
+                context,
                 uri
             )
-                    ?: "audio.mp3"
+                    ?: "audio.m4a"
+
+            // ۲) تشخیص MIME بر اساس نام فایل
             val mimeType = context.contentResolver.getType(uri)
-                    ?: "audio/mp3"
+                    ?: mimeFromExtension(fileName)
 
             val bytes = context.contentResolver.openInputStream(uri)
                 ?.use { it.readBytes() }
                     ?: return Result.Error("خواندن فایل ممکن نبود")
 
+            Log.d(
+                TAG,
+                "uploadAudio: fileName=$fileName bytes=${bytes.size} mime=$mimeType"
+            )
+
             if (bytes.isEmpty()) {
                 return Result.Error("فایل خالی است")
             }
 
-            val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
-            val part = MultipartBody.Part.createFormData(
+            val requestFile = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+            val audioPart = MultipartBody.Part.createFormData(
                 "audio",
                 fileName,
-                requestBody
+                requestFile
             )
 
             val response = apiService.uploadAudio(
-                userId.toString()
-                    .toRequestBody(),
-                content.id.toString()
-                    .toRequestBody(),
-                part
-            )
-
-            Log.d(
-                TAG,
-                "uploadAudio: response error=${response.error}"
+                userId = createTextPart(userId.toString()),
+                contentId = createTextPart(content.id.toString()),
+                startSec = createTextPart("-1"),
+                durationSec = createTextPart("-1"),
+                audio = audioPart
             )
 
             if (response.error) {
@@ -523,7 +544,6 @@ class ContentRepository(
 
             val uploaded = response.content
                     ?: return Result.Error("پاسخ سرور ناقص است")
-
             Result.Success(uploaded)
 
         } catch (e: Exception) {
@@ -536,7 +556,120 @@ class ContentRepository(
         }
     }
 
-    /** دریافت نام فایل از Uri (بدون permission اضافی) */
+    /**
+     * نام صحیح فایل را برمیگرداند:
+     * - برای فایلهای انتخابی از گالری → OpenableColumns
+     * - برای فایل ضبطشده (file://) → آخرین بخش مسیر
+     */
+    private fun resolveFileName(
+        context: Context,
+        uri: Uri
+    ): String? {
+        // اول از ContentResolver
+        try {
+            context.contentResolver.query(
+                uri,
+                null,
+                null,
+                null,
+                null
+            )
+                ?.use { cursor ->
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0 && cursor.moveToFirst()) {
+                        val name = cursor.getString(index)
+                        if (!name.isNullOrBlank()) return name
+                    }
+                }
+        } catch (_: Exception) {
+        }
+
+        // fallback: از خود URI
+        return uri.lastPathSegment?.substringAfterLast('/')
+                ?: null
+    }
+
+    /**
+     * بررسی لینک فایل بهصورت غیرمقرونبهصرفه:
+     * - اول HEAD میفرستیم (بدون Range)
+     * - بعد GET با Range کوچک
+     * - هرگز 412 را خطای بحرانی نمیگیریم چون ممکن است فقط محدودیت سرور باشد.
+     */
+    suspend fun verifyAudioUrl(url: String): Result<String> {
+        return kotlinx.coroutines.withContext(Dispatchers.IO) {
+            try {
+                val client = com.khz.madahi.data.remote.api.RetrofitClient.httpClient
+
+                // ===== ۱) تلاش اول: HEAD =====
+                val headRequest = okhttp3.Request.Builder()
+                    .url(url)
+                    .header(
+                        "User-Agent",
+                        "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36"
+                    )
+                    .head()
+                    .build()
+
+                client.newCall(headRequest)
+                    .execute()
+                    .use { headResponse ->
+                        val headCode = headResponse.code
+                        val headType = headResponse.header("Content-Type")
+                                ?: "unknown"
+                        headResponse.close()
+
+                        // اگر HEAD با موفقیت جواب داد
+                        if (headCode == 200 || headCode == 206 || headCode == 204 || headCode in 301..308  // ریدایرکتهای معتبر
+                        ) {
+                            return@withContext Result.Success("HTTP $headCode | $headType")
+                        }
+
+                        // اگر HEAD مسدود بود (403/405/412/...) ادامه بده
+                    }
+
+                // ===== ۲) تلاش دوم: GET با Range کوچک =====
+                val rangeRequest = okhttp3.Request.Builder()
+                    .url(url)
+                    .header(
+                        "Range",
+                        "bytes=0-0"
+                    )
+                    .header(
+                        "User-Agent",
+                        "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36"
+                    )
+                    .build()
+
+                client.newCall(rangeRequest)
+                    .execute()
+                    .use { rangeResponse ->
+                        val rangeCode = rangeResponse.code
+                        val rangeType = rangeResponse.header("Content-Type")
+                                ?: "unknown"
+
+                        // اگر 200 یا 206 شد یعنی فایل سالم است
+                        if (rangeCode == 200 || rangeCode == 206) {
+                            return@withContext Result.Success("HTTP $rangeCode | $rangeType")
+                        }
+
+                        // اگر 412 یا 416 شد یعنی فایل وجود دارد ولی سرور Range را قبول ندارد
+                        // این وضعیت را بهعنوان هشدار در نظر میگیریم نه خطای حتمی
+                        if (rangeCode == 412 || rangeCode == 416) {
+                            return@withContext Result.Success("HTTP $rangeCode (بهاحتمال زیاد فایل موجود است) | $rangeType")
+                        }
+
+                        // کاملاً 404 یا مشابه؟ خطای واقعی
+                        return@withContext Result.Error(
+                            "لینک فایل پاسخ HTTP $rangeCode داد — فایل در آن آدرس موجود نیست ($rangeType)"
+                        )
+                    }
+
+            } catch (e: Exception) {
+                Result.Error("بررسی لینک ممکن نبود: ${e.message}")
+            }
+        }
+    }
+
     private fun queryFileName(
         resolver: ContentResolver,
         uri: Uri
@@ -544,6 +677,7 @@ class ContentRepository(
         var name: String? = null
         resolver.query(
             uri,
+            null,
             null,
             null,
             null
@@ -555,5 +689,22 @@ class ContentRepository(
                 }
             }
         return name
+    }
+
+    private fun mimeFromExtension(fileName: String): String {
+        val ext = fileName.substringAfterLast(
+            '.',
+            ""
+        )
+            .lowercase()
+        return when (ext) {
+            "mp3" -> "audio/mpeg"
+            "m4a" -> "audio/m4a"
+            "aac" -> "audio/aac"
+            "ogg" -> "audio/ogg"
+            "wav" -> "audio/wav"
+            "mp4" -> "audio/mp4"
+            else  -> "application/octet-stream"
+        }
     }
 }

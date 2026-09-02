@@ -7,7 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.ContentRepository
+import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.models.Content
+import com.khz.madahi.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,39 +59,47 @@ class FavoritesViewModel(
                 "loadFavorites: loading..."
             )
 
-            val userId = preferencesManager.user?.id
-                    ?: "0"
-            Log.d(
-                TAG,
-                "loadFavorites: userId=$userId"
-            )
-
             try {
-                // ✅ دریافت از دیتابیس محلی
+                // ✅ 1) نمایش سریع از دیتابیس محلی (کش)
                 val localFavorites = appDatabase.contentDAO()
                     .getFavorites()
+                val distinctLocal = localFavorites.distinctBy { it.id }
                 Log.d(
                     TAG,
-                    "loadFavorites: local favorites size=${localFavorites.size}"
+                    "loadFavorites: local favorites size=${distinctLocal.size}"
                 )
 
-                // ✅ جلوگیری از دوبار اضافه شدن با استفاده از Distinct
-                val distinctFavorites = localFavorites.distinctBy { it.id }
-
-                if (distinctFavorites.isNotEmpty()) {
-                    _favorites.value = distinctFavorites
-                    _uiState.value = FavoritesUiState.Success
-                    Log.d(
-                        TAG,
-                        "loadFavorites: loaded ${distinctFavorites.size} favorites"
-                    )
-                } else {
-                    _favorites.value = emptyList()
+                if (distinctLocal.isNotEmpty()) {
+                    _favorites.value = distinctLocal
                     _uiState.value = FavoritesUiState.Success
                 }
 
-                // همگام‌سازی با سرور (اختیاری)
-                // ...
+                // ✅ 2) همگام‌سازی با سرور — لیست اصلی از سرور می‌آید
+                // (حتی اگر دیتابیس محلی پاک شده باشد، لیست درست نمایش داده می‌شود)
+                val userId = preferencesManager.user?.id
+                        ?: GUEST_USER_ID
+
+                when (val result = contentRepository.getFavorites(userId)) {
+                    is Result.Success -> {
+                        _favorites.value = result.data.distinctBy { it.id }
+                        _uiState.value = FavoritesUiState.Success
+                        Log.d(
+                            TAG,
+                            "loadFavorites: server favorites size=${result.data.size}"
+                        )
+                    }
+
+                    is Result.Error   -> {
+                        // اگر کش خالی بود خطا نشان بده؛
+                        // اگر کش داشت، لیست محلی دست‌نخورده می‌ماند
+                        if (_favorites.value.isEmpty()) {
+                            _uiState.value = FavoritesUiState.Error(result.message)
+                        }
+                    }
+
+                    is Result.Loading -> { /* ignore */
+                    }
+                }
 
             } catch (e: Exception) {
                 Log.e(

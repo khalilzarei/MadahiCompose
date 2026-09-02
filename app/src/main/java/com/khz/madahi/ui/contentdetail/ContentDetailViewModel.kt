@@ -43,6 +43,10 @@ class ContentDetailViewModel(
     private val _uploadState = MutableStateFlow<UploadState>(UploadState.Idle)
     val uploadState: StateFlow<UploadState> = _uploadState.asStateFlow()
 
+    // پیام بررسی لینک فایل بعد از آپلود (تشخیص مشکل لینک در مقابل مشکل فایل)
+    private val _audioUrlMessage = MutableStateFlow<String?>(null)
+    val audioUrlMessage: StateFlow<String?> = _audioUrlMessage.asStateFlow()
+
     fun loadFavoriteStatus(content: Content) {
         viewModelScope.launch {
             logD("loadFavoriteStatus: contentId=${content.id}")
@@ -420,13 +424,17 @@ class ContentDetailViewModel(
     }
 
     // ============ آپلود ویس/سبک (نسخه پرو) ============
+    // startSec/durationSec: محدوده‌ی کات — برش توسط سرور انجام می‌شود (-1 = بدون برش)
     fun uploadAudio(
         context: Context,
         content: Content,
-        uri: Uri
+        uri: Uri,
+        startSec: Double = -1.0,
+        durationSec: Double = -1.0
     ) {
         viewModelScope.launch {
             _uploadState.value = UploadState.Uploading
+            _audioUrlMessage.value = null
 
             val userId = preferencesManager.user?.id
                     ?: GUEST_USER_ID
@@ -435,7 +443,9 @@ class ContentDetailViewModel(
                 context,
                 userId,
                 content,
-                uri
+                uri,
+                startSec,
+                durationSec
             )) {
                 is Result.Success -> {
                     // ✅ به‌روزرسانی ردیف محلی با audio_url جدید
@@ -447,6 +457,24 @@ class ContentDetailViewModel(
                     }
                     _uploadState.value = UploadState.Success
                     logD("uploadAudio: ✅ contentId=${content.id}")
+
+                    // ✅ بررسی اینکه لینک برگشتی واقعاً کار می‌کند
+                    val url = result.data.audioUrl
+                    if (!url.isNullOrBlank()) {
+                        _audioUrlMessage.value = "در حال بررسی لینک فایل…"
+                        when (val check = contentRepository.verifyAudioUrl(url)) {
+                            is Result.Success -> {
+                                _audioUrlMessage.value = "✅ لینک فایل سالم است (${check.data})"
+                            }
+
+                            is Result.Error   -> {
+                                _audioUrlMessage.value = "⚠️ آپلود شد ولی لینک ایراد دارد: ${check.message}"
+                            }
+
+                            is Result.Loading -> { /* ignore */
+                            }
+                        }
+                    }
                 }
 
                 is Result.Error   -> {
