@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,7 +57,10 @@ import kotlinx.coroutines.launch
 fun ContentDetailScreen(
     content: Content?,
     onNavigateBack: () -> Unit,
-    onFavoriteChanged: () -> Unit = {}
+    onFavoriteChanged: () -> Unit = {},
+    isReadOnly: Boolean = false,
+    publisherName: String? = null,
+    style: String? = null
 ) {
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
@@ -213,6 +217,9 @@ fun ContentDetailScreen(
         favoriteState = favoriteState,
         uploadState = uploadState,
         audioUrlMessage = audioUrlMessage,
+        isReadOnly = isReadOnly,
+        publisherName = publisherName,
+        style = style,
         onFontSizeChange = { saveFontSize(it) },
         onToggleFavorite = {
             viewModel.toggleFavorite(content) { onFavoriteChanged() }
@@ -293,6 +300,8 @@ fun ContentDetailScreenContent(
     uploadState: UploadState = UploadState.Idle,
     audioUrlMessage: String? = null,
     isReadOnly: Boolean = false,
+    publisherName: String? = null,
+    style: String? = null,
     onFontSizeChange: (Float) -> Unit,
     onToggleFavorite: () -> Unit,
     onShare: () -> Unit,
@@ -331,6 +340,26 @@ fun ContentDetailScreenContent(
                     subTitle = content.answer.ifBlank { " " },
                     onBack = onNavigateBack
                 )
+
+                // ===== سبک • ناشر (برای شعرهای کتابچه) =====
+                val metaLine = listOf(style, publisherName)
+                    .filterNotNull()
+                    .filter { it.isNotBlank() }
+                    .joinToString(" • ")
+                if (metaLine.isNotBlank()) {
+                    Text(
+                        text = metaLine,
+                        color = colors.gold,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                    )
+                    Spacer(Modifier.height(6.dp))
+                }
+
                 Spacer(Modifier.height(8.dp))
             }
 

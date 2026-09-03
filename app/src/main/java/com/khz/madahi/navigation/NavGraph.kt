@@ -17,18 +17,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.khz.madahi.data.local.database.AppDatabase
+import com.khz.madahi.data.remote.api.RetrofitClient
+import com.khz.madahi.data.remote.repository.BookletRepository
 import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
+import com.khz.madahi.models.LibraryContent
 import com.khz.madahi.ui.about.AboutScreen
+import com.khz.madahi.ui.appselection.AppSelectionScreen
+import com.khz.madahi.ui.booklet.BookletDetailScreen
+import com.khz.madahi.ui.booklet.BookletScreen
 import com.khz.madahi.ui.category.CategoryScreen
 import com.khz.madahi.ui.common.BottomBarActions
 import com.khz.madahi.ui.content.ContentScreen
 import com.khz.madahi.ui.contentdetail.ContentDetailScreen
 import com.khz.madahi.ui.favorite.FavoritesScreen
-import com.khz.madahi.ui.appselection.AppSelectionScreen
-import com.khz.madahi.ui.booklet.BookletScreen
-import com.khz.madahi.ui.booklet.BookletDetailScreen
 import com.khz.madahi.ui.intro.IntroScreen
 import com.khz.madahi.ui.login.LoginScreen
 import com.khz.madahi.ui.message.MessageScreen
@@ -36,6 +39,7 @@ import com.khz.madahi.ui.poems.PoemsScreen
 import com.khz.madahi.ui.profile.ProfileScreen
 import com.khz.madahi.ui.setting.SettingScreen
 import com.khz.madahi.ui.splash.SplashScreen
+import com.khz.madahi.utils.Result
 
 // ============ Routes ============
 sealed class Screen(val route: String) {
@@ -45,10 +49,21 @@ sealed class Screen(val route: String) {
     object AppSelectionScreen : Screen("appSelection")
     object BookletScreen : Screen("booklet")
     object BookletDetail : Screen("bookletDetail/{sectionId}/{sectionTitle}") {
-        fun passSection(sectionId: Int, sectionTitle: String): String {
+        fun passSection(
+            sectionId: Int,
+            sectionTitle: String
+        ): String {
             return "bookletDetail/$sectionId/$sectionTitle"
         }
     }
+
+    // ✅ نمایش شعر کتابچه با ContentDetailScreen (از سرور خوانده می‌شود)
+    object BookletContent : Screen("bookletContent/{contentId}") {
+        fun passContent(contentId: Int): String {
+            return "bookletContent/$contentId"
+        }
+    }
+
     object CategoryScreen : Screen("category")
 
     // ✅ مسیر Content با categoryId
@@ -174,20 +189,26 @@ fun NavGraph(
                     navController.navigate(Screen.BookletScreen.route) {
                         popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
                     }
-                }
-            )
+                })
         }
 
         // ============ Booklet ============
         composable(Screen.BookletScreen.route) {
             BookletScreen(
                 onNavigateBack = {
-                    navController.popBackStack(Screen.AppSelectionScreen.route, inclusive = false)
+                    navController.popBackStack(
+                        Screen.AppSelectionScreen.route,
+                        inclusive = false
+                    )
                 },
                 onNavigateToSection = { sectionId, sectionTitle ->
-                    navController.navigate(Screen.BookletDetail.passSection(sectionId, sectionTitle))
-                }
-            )
+                    navController.navigate(
+                        Screen.BookletDetail.passSection(
+                            sectionId,
+                            sectionTitle
+                        )
+                    )
+                })
         }
 
         // ============ Booklet Detail ============
@@ -195,17 +216,63 @@ fun NavGraph(
             route = Screen.BookletDetail.route,
             arguments = listOf(
                 androidx.navigation.navArgument("sectionId") { type = NavType.IntType },
-                androidx.navigation.navArgument("sectionTitle") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val sectionId = backStackEntry.arguments?.getInt("sectionId") ?: 0
-            val sectionTitle = backStackEntry.arguments?.getString("sectionTitle") ?: ""
+                androidx.navigation.navArgument("sectionTitle") { type = NavType.StringType })) { backStackEntry ->
+            val sectionId = backStackEntry.arguments?.getInt("sectionId")
+                    ?: 0
+            val sectionTitle = backStackEntry.arguments?.getString("sectionTitle")
+                    ?: ""
 
             BookletDetailScreen(
                 sectionId = sectionId,
                 sectionTitle = sectionTitle,
-                onNavigateBack = { navController.popBackStack() }
-            )
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToContent = { contentId ->
+                    navController.navigate(Screen.BookletContent.passContent(contentId))
+                })
+        }
+
+        // ============ Booklet Content (نمایش شعر کتابچه) ============
+        composable(
+            route = Screen.BookletContent.route,
+            arguments = listOf(
+                navArgument("contentId") { type = NavType.StringType })) { backStackEntry ->
+            val contentId = backStackEntry.arguments?.getString("contentId")
+                ?.toIntOrNull()
+                    ?: 0
+
+            val contentLoadState = produceState<Pair<Boolean, LibraryContent?>>(
+                initialValue = false to null,
+                key1 = contentId
+            ) {
+                value = try {
+                    val repository = BookletRepository(RetrofitClient.apiService)
+                    val lib = when (val result = repository.getContent(contentId)) {
+                        is Result.Success -> result.data
+                        else              -> null
+                    }
+                    true to lib
+                } catch (e: Exception) {
+                    true to null
+                }
+            }
+            val (isContentLoaded, libraryContent) = contentLoadState.value
+
+            if (!isContentLoaded) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            } else {
+                ContentDetailScreen(
+                    content = libraryContent?.toContent(),
+                    onNavigateBack = { navController.popBackStack() },
+                    isReadOnly = true,
+                    publisherName = libraryContent?.publisherName,
+                    style = libraryContent?.style
+                )
+            }
         }
 
         // ============ Category ============
@@ -213,7 +280,10 @@ fun NavGraph(
             CategoryScreen(
                 bottomBarActions = bottomBarActions,
                 onNavigateBack = {
-                    navController.popBackStack(Screen.AppSelectionScreen.route, inclusive = false)
+                    navController.popBackStack(
+                        Screen.AppSelectionScreen.route,
+                        inclusive = false
+                    )
                 },
                 onNavigateToContent = { category ->
                     // ✅ ارسال categoryId به جای کل category

@@ -1,9 +1,9 @@
 package com.khz.madahi.models.response
 
 import com.google.gson.annotations.SerializedName
-import com.khz.madahi.models.Content
+import com.khz.madahi.models.LibraryContent
 
-// پاسخ api/getLibraryContents.php — شعرهای یک دسته با صفحه‌بندی
+// پاسخ api/getLibraryContents.php — شعرهای یک گروه کتابچه با صفحه‌بندی
 class LibraryContentsResponse {
     @SerializedName("error")
     var error: Boolean = false
@@ -12,7 +12,7 @@ class LibraryContentsResponse {
     var errorMsg: String? = null
 
     @SerializedName("data")
-    var contents: MutableList<Content?>? = null
+    var contents: MutableList<LibraryContent?>? = null
 
     @SerializedName("total")
     var total: Int = 0

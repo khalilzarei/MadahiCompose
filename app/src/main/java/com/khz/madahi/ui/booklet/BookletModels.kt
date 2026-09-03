@@ -27,7 +27,9 @@ data class BookletItem(
     val sectionId: Int,
     val title: String,
     val content: String,
-    val source: String = ""    // منبع (مثل: مفاتیح الجنان)
+    val source: String = "",        // منبع (مثل: مفاتیح الجنان)
+    val publisherName: String = "", // نام کاربری که شعر را منتشر کرده
+    val style: String = ""          // سبک شعر (نوحه / روضه / ...)
 )
 
 /**
@@ -35,7 +37,12 @@ data class BookletItem(
  */
 sealed class BookletUiState {
     object Loading : BookletUiState()
-    data class Success(val sections: List<BookletSection>) : BookletUiState()
+    data class Success(
+        val sections: List<BookletSection>,
+        val isLoadingMore: Boolean = false,   // در حال بارگذاری صفحه بعدی
+        val hasMore: Boolean = false          // آیا صفحه بعدی وجود دارد؟
+    ) : BookletUiState()
+
     data class Error(val message: String) : BookletUiState()
 }
 
@@ -46,7 +53,10 @@ sealed class BookletDetailUiState {
     object Loading : BookletDetailUiState()
     data class Success(
         val section: BookletSection,
-        val items: List<BookletItem>
+        val items: List<BookletItem>,
+        val isLoadingMore: Boolean = false,   // در حال بارگذاری صفحه بعدی
+        val hasMore: Boolean = false          // آیا صفحه بعدی وجود دارد؟
     ) : BookletDetailUiState()
+
     data class Error(val message: String) : BookletDetailUiState()
 }

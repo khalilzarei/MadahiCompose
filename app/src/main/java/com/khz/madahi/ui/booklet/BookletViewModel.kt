@@ -4,145 +4,312 @@ package com.khz.madahi.ui.booklet
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.khz.madahi.data.local.preferences.PreferencesManager
+import com.khz.madahi.data.remote.api.RetrofitClient
+import com.khz.madahi.data.remote.repository.BookletRepository
+import com.khz.madahi.utils.Result
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 // ============================================================
-// ViewModel صفحه اصلی کتابچه
+// ViewModel صفحه اصلی کتابچه — بارگذاری صفحه‌به‌صفحه (۳۰ تایی)
 // ------------------------------------------------------------
-// در حال حاضر با داده‌های placeholder کار می‌کند
-// بعداً به API واقعی وصل خواهد شد
+// - صفحه اول ۳۰ دسته برمی‌گردد؛ با رسیدن به انتهای لیست (اسکرول)
+//   ۳۰ تای بعدی اضافه می‌شود و همین‌طور تا آخر.
+// - جستجو، بارگذاری را از صفحه اول شروع می‌کند.
 // ============================================================
 
 class BookletViewModel(
-    private val preferencesManager: PreferencesManager
+    private val bookletRepository: BookletRepository
 ) : ViewModel() {
+
+    companion object {
+        private const val PAGE_SIZE = 30
+    }
 
     private val _uiState = MutableStateFlow<BookletUiState>(BookletUiState.Loading)
     val uiState: StateFlow<BookletUiState> = _uiState.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    // وضعیت صفحه‌بندی
+    private var currentPage = 0
+    private var totalPages = 1
+    private var isLoadingMore = false
+
     init {
-        loadSections()
+        viewModelScope.launch {
+            searchQuery.collectLatest { q ->
+                delay(350)
+                reload(q)
+            }
+        }
     }
 
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    /** تلاش مجدد — بارگذاری از صفحه اول با کوئری فعلی */
     fun loadSections() {
+        viewModelScope.launch { reload(_searchQuery.value) }
+    }
+
+    /** بارگذاری صفحه بعد — وقتی کاربر به انتهای لیست رسید */
+    fun loadMore() {
+        val current = _uiState.value as? BookletUiState.Success
+                ?: return
+        if (isLoadingMore || !current.hasMore) return
+
         viewModelScope.launch {
-            _uiState.value = BookletUiState.Loading
-            delay(500) // شبیه‌سازی لود
+            isLoadingMore = true
+            _uiState.value = current.copy(isLoadingMore = true)
 
-            // ✅ داده‌های placeholder — بعداً از API خوانده می‌شود
-            val sections = listOf(
-                BookletSection(
-                    id = 1,
-                    title = "دعاهای روزانه",
-                    description = "دعاهای صبح، شب و روزهای هفته",
-                    icon = "🤲",
-                    itemCount = 12
-                ),
-                BookletSection(
-                    id = 2,
-                    title = "زیارات",
-                    description = "زیارت عاشورا، امام حسین و ائمه",
-                    icon = "🕌",
-                    itemCount = 8
-                ),
-                BookletSection(
-                    id = 3,
-                    title = "متون محرم",
-                    description = "مرثیه‌ها و سینه‌زنی‌های محرم",
-                    icon = "🌙",
-                    itemCount = 15
-                ),
-                BookletSection(
-                    id = 4,
-                    title = "متون فاطمیه",
-                    description = "مرثیه‌های حضرت زهرا (س)",
-                    icon = "🌹",
-                    itemCount = 10
-                ),
-                BookletSection(
-                    id = 5,
-                    title = "اربعین",
-                    description = "متون و ادعیه اربعین حسینی",
-                    icon = "🏴",
-                    itemCount = 6
-                ),
-                BookletSection(
-                    id = 6,
-                    title = "شهادت امام رضا (ع)",
-                    description = "متون شهادت امام رضا (ع)",
-                    icon = "💚",
-                    itemCount = 5
+            val nextPage = currentPage + 1
+            when (val result = bookletRepository.getCategories(
+                q = _searchQuery.value,
+                page = nextPage,
+                limit = PAGE_SIZE
+            )) {
+                is Result.Success -> {
+                    currentPage = result.data.page
+                    totalPages = result.data.pages
+
+                    val newSections = result.data.items.filter {
+                        (it.poemCount
+                                ?: 0) > 0
+                    }   // حذف دسته‌های بدون شعر
+                        .map { category ->
+                            BookletSection(
+                                id = category.id,
+                                title = category.title.ifBlank { "بدون عنوان" },
+                                description = category.description,
+                                icon = "📄",
+                                itemCount = category.poemCount
+                                        ?: 0
+                            )
+                        }
+                        .sortedByDescending { it.id }
+
+                    val merged = (current.sections + newSections).distinctBy { it.id }
+
+                    _uiState.value = BookletUiState.Success(
+                        sections = merged,
+                        isLoadingMore = false,
+                        hasMore = currentPage < totalPages
+                    )
+                }
+
+                is Result.Error   -> {
+                    // لیست فعلی را نگه می‌داریم؛ تلاش بعدی با اسکرول دوباره انجام می‌شود
+                    _uiState.value = current.copy(isLoadingMore = false)
+                }
+
+                is Result.Loading -> { /* ignore */
+                }
+            }
+
+            isLoadingMore = false
+        }
+    }
+
+    private suspend fun reload(q: String) {
+        _uiState.value = BookletUiState.Loading
+
+        when (val result = bookletRepository.getCategories(
+            q = q,
+            page = 1,
+            limit = PAGE_SIZE
+        )) {
+            is Result.Success -> {
+                currentPage = result.data.page
+                totalPages = result.data.pages
+
+                val sections = result.data.items.filter {
+                    (it.poemCount
+                            ?: 0) > 0
+                }   // حذف دسته‌های بدون شعر
+                    .map { category ->
+                        BookletSection(
+                            id = category.id,
+                            title = category.title.ifBlank { "بدون عنوان" },
+                            description = category.description,
+                            icon = "📄",
+                            itemCount = category.poemCount
+                                    ?: 0
+                        )
+                    }
+                    .sortedByDescending { it.id }
+
+                _uiState.value = BookletUiState.Success(
+                    sections = sections,
+                    isLoadingMore = false,
+                    hasMore = currentPage < totalPages
                 )
-            )
+            }
 
-            _uiState.value = BookletUiState.Success(sections)
+            is Result.Error   -> {
+                _uiState.value = BookletUiState.Error(result.message)
+            }
+
+            is Result.Loading -> { /* ignore */
+            }
         }
     }
 }
 
 // ============================================================
-// ViewModel صفحه جزئیات هر بخش کتابچه
+// ViewModel صفحه جزئیات هر بخش کتابچه — بارگذاری صفحه‌به‌صفحه
 // ============================================================
 
 class BookletDetailViewModel(
     private val sectionId: Int,
-    private val sectionTitle: String
+    private val sectionTitle: String,
+    private val bookletRepository: BookletRepository
 ) : ViewModel() {
+
+    companion object {
+        private const val PAGE_SIZE = 30
+    }
 
     private val _uiState = MutableStateFlow<BookletDetailUiState>(BookletDetailUiState.Loading)
     val uiState: StateFlow<BookletDetailUiState> = _uiState.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private var currentPage = 0
+    private var totalPages = 1
+    private var isLoadingMore = false
+
     init {
-        loadItems()
+        viewModelScope.launch {
+            searchQuery.collectLatest { q ->
+                delay(350)
+                reload(q)
+            }
+        }
     }
 
-    private fun loadItems() {
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun loadItems() {
+        viewModelScope.launch { reload(_searchQuery.value) }
+    }
+
+    /** بارگذاری صفحه بعد — وقتی کاربر به انتهای لیست شعرها رسید */
+    fun loadMore() {
+        val current = _uiState.value as? BookletDetailUiState.Success
+                ?: return
+        if (isLoadingMore || !current.hasMore) return
+
         viewModelScope.launch {
-            _uiState.value = BookletDetailUiState.Loading
-            delay(400)
+            isLoadingMore = true
+            _uiState.value = current.copy(isLoadingMore = true)
 
-            val section = BookletSection(
-                id = sectionId,
-                title = sectionTitle,
-                description = "",
-                icon = ""
-            )
+            val nextPage = currentPage + 1
+            when (val result = bookletRepository.getContents(
+                categoryId = sectionId,
+                q = _searchQuery.value,
+                page = nextPage,
+                limit = PAGE_SIZE
+            )) {
+                is Result.Success -> {
+                    currentPage = result.data.page
+                    totalPages = result.data.pages
 
-            // ✅ داده‌های placeholder — بعداً از API خوانده می‌شود
-            val items = listOf(
-                BookletItem(
-                    id = 1,
-                    sectionId = sectionId,
-                    title = "دعای صبحگاهی",
-                    content = """
-                        اَللّهُمَّ بِکَ صَلَّیْتُ عَلَیْکَ وَ بِکَ نَوَیْتُ
-                        وَ بِکَ آمَنْتُ وَ عَلَیْکَ تَوَکَّلْتُ
-                        وَ إِلَیْکَ أَنَبْتُ
-                    """.trimIndent(),
-                    source = "مفاتیح الجنان"
-                ),
-                BookletItem(
-                    id = 2,
-                    sectionId = sectionId,
-                    title = "دعای کمیل",
-                    content = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِیمِ\n\nاللَّهُمَّ کَمَا تَجِبُ الرَّحْمَةُ لِمَنْ رَحِمْتَ...",
-                    source = "مفاتیح الجنان"
-                ),
-                BookletItem(
-                    id = 3,
-                    sectionId = sectionId,
-                    title = "دعای فرج",
-                    content = "اللَّهُمَّ کُنْ لِوَلِیِّکَ الحُجَّةِ بْنِ الحَسَنِ...",
-                    source = "دعای ندبه"
+                    val newItems = result.data.items.map { poem ->
+                        BookletItem(
+                            id = poem.id,
+                            sectionId = sectionId,
+                            title = poem.subject
+                                    ?: "",
+                            content = poem.content
+                                    ?: "",
+                            publisherName = poem.publisherName
+                                    ?: "",
+                            style = poem.style
+                                    ?: ""
+                        )
+                    }
+
+                    val merged = (current.items + newItems).distinctBy { it.id }
+
+                    _uiState.value = BookletDetailUiState.Success(
+                        section = current.section,
+                        items = merged,
+                        isLoadingMore = false,
+                        hasMore = currentPage < totalPages
+                    )
+                }
+
+                is Result.Error   -> {
+                    _uiState.value = current.copy(isLoadingMore = false)
+                }
+
+                is Result.Loading -> { /* ignore */
+                }
+            }
+
+            isLoadingMore = false
+        }
+    }
+
+    private suspend fun reload(q: String) {
+        _uiState.value = BookletDetailUiState.Loading
+
+        when (val result = bookletRepository.getContents(
+            categoryId = sectionId,
+            q = q,
+            page = 1,
+            limit = PAGE_SIZE
+        )) {
+            is Result.Success -> {
+                currentPage = result.data.page
+                totalPages = result.data.pages
+
+                val section = BookletSection(
+                    id = sectionId,
+                    title = sectionTitle,
+                    description = "",
+                    icon = ""
                 )
-            )
 
-            _uiState.value = BookletDetailUiState.Success(section, items)
+                val items = result.data.items.map { poem ->
+                    BookletItem(
+                        id = poem.id,
+                        sectionId = sectionId,
+                        title = poem.subject
+                                ?: "",
+                        content = poem.content
+                                ?: "",
+                        publisherName = poem.publisherName
+                                ?: "",
+                        style = poem.style
+                                ?: ""
+                    )
+                }
+
+                _uiState.value = BookletDetailUiState.Success(
+                    section = section,
+                    items = items,
+                    isLoadingMore = false,
+                    hasMore = currentPage < totalPages
+                )
+            }
+
+            is Result.Error   -> {
+                _uiState.value = BookletDetailUiState.Error(result.message)
+            }
+
+            is Result.Loading -> { /* ignore */
+            }
         }
     }
 }
@@ -151,13 +318,12 @@ class BookletDetailViewModel(
 // Factory
 // ============================================================
 
-class BookletViewModelFactory(
-    private val preferencesManager: PreferencesManager
-) : ViewModelProvider.Factory {
+class BookletViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BookletViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return BookletViewModel(preferencesManager) as T
+            @Suppress("UNCHECKED_CAST") return BookletViewModel(
+                bookletRepository = BookletRepository(RetrofitClient.apiService)
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
@@ -169,8 +335,11 @@ class BookletDetailViewModelFactory(
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(BookletDetailViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return BookletDetailViewModel(sectionId, sectionTitle) as T
+            @Suppress("UNCHECKED_CAST") return BookletDetailViewModel(
+                sectionId = sectionId,
+                sectionTitle = sectionTitle,
+                bookletRepository = BookletRepository(RetrofitClient.apiService)
+            ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

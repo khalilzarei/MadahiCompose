@@ -9,6 +9,9 @@ import com.khz.madahi.models.response.ContentResponse
 import com.khz.madahi.models.response.CreatePremiumInvoiceResponse
 import com.khz.madahi.models.response.DataResponse
 import com.khz.madahi.models.response.InsertFavoriteResponse
+import com.khz.madahi.models.response.LibraryCategoriesResponse
+import com.khz.madahi.models.response.LibraryContentResponse
+import com.khz.madahi.models.response.LibraryContentsResponse
 import com.khz.madahi.models.response.LoginResponse
 import com.khz.madahi.models.response.MessageResponse
 import com.khz.madahi.models.response.PremiumStatusResponse
@@ -182,4 +185,31 @@ interface APIService {
     suspend fun getPoemsWithAudio(
         @Field("user_id") userId: Int
     ): DataResponse
+
+    // ============ کتابچه (کتابخانه عمومی) ============
+    // دسته‌های گروه‌بندی‌شده — id هر آیتم «نماینده‌ی گروه» است
+    @FormUrlEncoded
+    @POST("getLibraryCategories.php")
+    suspend fun getLibraryCategories(
+        @Field("q") q: String = "",
+        @Field("page") page: Int = 1,
+        @Field("limit") limit: Int = 30
+    ): LibraryCategoriesResponse
+
+    // شعرهای یک گروه کتابچه — به‌همراه publisher_name و style
+    @FormUrlEncoded
+    @POST("getLibraryContents.php")
+    suspend fun getLibraryContents(
+        @Field("category_id") categoryId: Int,
+        @Field("q") q: String = "",
+        @Field("page") page: Int = 1,
+        @Field("limit") limit: Int = 30
+    ): LibraryContentsResponse
+
+    // جزئیات یک شعر کتابچه — به‌همراه publisher_name و style
+    @FormUrlEncoded
+    @POST("getContentWithId.php")
+    suspend fun getLibraryContentWithId(
+        @Field("content_id") contentId: Int
+    ): LibraryContentResponse
 }
