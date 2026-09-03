@@ -78,7 +78,7 @@ val defaultIntroSlides = listOf(
 @Composable
 fun IntroScreen(
     onNavigateToLogin: () -> Unit,
-    onNavigateToCategory: () -> Unit
+    onNavigateToAppSelection: () -> Unit
 ) {
     val colors = LocalMadahiColors.current
     val context = LocalContext.current
@@ -94,7 +94,7 @@ fun IntroScreen(
     fun onFinishIntro() {
         preferencesManager.isFirstTimeLaunch = false
         if (preferencesManager.isLoggedIn) {
-            onNavigateToCategory()
+            onNavigateToAppSelection()
         } else {
             onNavigateToLogin()
         }
@@ -255,6 +255,6 @@ private fun IntroScreenPreview() {
     MadahiThemeGreen(darkTheme = true) {
         IntroScreen(
             onNavigateToLogin = {},
-            onNavigateToCategory = {})
+            onNavigateToAppSelection = {})
     }
 }

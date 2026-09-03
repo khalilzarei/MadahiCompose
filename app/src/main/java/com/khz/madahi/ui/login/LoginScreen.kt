@@ -59,7 +59,7 @@ import com.khz.madahi.utils.NetworkChecker
 
 @Composable
 fun LoginScreen(
-    onNavigateToCategory: () -> Unit
+    onNavigateToAppSelection: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -86,7 +86,7 @@ fun LoginScreen(
     // ============ Effects ============
     LaunchedEffect(uiState) {
         when (uiState) {
-            is LoginUiState.Success -> onNavigateToCategory()
+            is LoginUiState.Success -> onNavigateToAppSelection()
             is LoginUiState.Error   -> errorMessage = (uiState as LoginUiState.Error).message
             else                    -> Unit
         }

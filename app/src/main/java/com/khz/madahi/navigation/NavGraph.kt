@@ -26,6 +26,9 @@ import com.khz.madahi.ui.common.BottomBarActions
 import com.khz.madahi.ui.content.ContentScreen
 import com.khz.madahi.ui.contentdetail.ContentDetailScreen
 import com.khz.madahi.ui.favorite.FavoritesScreen
+import com.khz.madahi.ui.appselection.AppSelectionScreen
+import com.khz.madahi.ui.booklet.BookletScreen
+import com.khz.madahi.ui.booklet.BookletDetailScreen
 import com.khz.madahi.ui.intro.IntroScreen
 import com.khz.madahi.ui.login.LoginScreen
 import com.khz.madahi.ui.message.MessageScreen
@@ -39,6 +42,13 @@ sealed class Screen(val route: String) {
     object SplashScreen : Screen("splash")
     object IntroScreen : Screen("intro")
     object LoginScreen : Screen("login")
+    object AppSelectionScreen : Screen("appSelection")
+    object BookletScreen : Screen("booklet")
+    object BookletDetail : Screen("bookletDetail/{sectionId}/{sectionTitle}") {
+        fun passSection(sectionId: Int, sectionTitle: String): String {
+            return "bookletDetail/$sectionId/$sectionTitle"
+        }
+    }
     object CategoryScreen : Screen("category")
 
     // ✅ مسیر Content با categoryId
@@ -120,8 +130,8 @@ fun NavGraph(
                         popUpTo(Screen.SplashScreen.route) { inclusive = true }
                     }
                 },
-                onNavigateToCategory = {
-                    navController.navigate(Screen.CategoryScreen.route) {
+                onNavigateToAppSelection = {
+                    navController.navigate(Screen.AppSelectionScreen.route) {
                         popUpTo(Screen.SplashScreen.route) { inclusive = true }
                     }
                 })
@@ -135,8 +145,8 @@ fun NavGraph(
                         popUpTo(Screen.IntroScreen.route) { inclusive = true }
                     }
                 },
-                onNavigateToCategory = {
-                    navController.navigate(Screen.CategoryScreen.route) {
+                onNavigateToAppSelection = {
+                    navController.navigate(Screen.AppSelectionScreen.route) {
                         popUpTo(Screen.IntroScreen.route) { inclusive = true }
                     }
                 })
@@ -145,18 +155,66 @@ fun NavGraph(
         // ============ Login ============
         composable(Screen.LoginScreen.route) {
             LoginScreen(
-                onNavigateToCategory = {
-                    navController.navigate(Screen.CategoryScreen.route) {
+                onNavigateToAppSelection = {
+                    navController.navigate(Screen.AppSelectionScreen.route) {
                         popUpTo(Screen.LoginScreen.route) { inclusive = true }
                     }
                 })
+        }
+
+        // ============ App Selection ============
+        composable(Screen.AppSelectionScreen.route) {
+            AppSelectionScreen(
+                onNavigateToCategory = {
+                    navController.navigate(Screen.CategoryScreen.route) {
+                        popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
+                    }
+                },
+                onNavigateToBooklet = {
+                    navController.navigate(Screen.BookletScreen.route) {
+                        popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
+        // ============ Booklet ============
+        composable(Screen.BookletScreen.route) {
+            BookletScreen(
+                onNavigateBack = {
+                    navController.popBackStack(Screen.AppSelectionScreen.route, inclusive = false)
+                },
+                onNavigateToSection = { sectionId, sectionTitle ->
+                    navController.navigate(Screen.BookletDetail.passSection(sectionId, sectionTitle))
+                }
+            )
+        }
+
+        // ============ Booklet Detail ============
+        composable(
+            route = Screen.BookletDetail.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("sectionId") { type = NavType.IntType },
+                androidx.navigation.navArgument("sectionTitle") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val sectionId = backStackEntry.arguments?.getInt("sectionId") ?: 0
+            val sectionTitle = backStackEntry.arguments?.getString("sectionTitle") ?: ""
+
+            BookletDetailScreen(
+                sectionId = sectionId,
+                sectionTitle = sectionTitle,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         // ============ Category ============
         composable(Screen.CategoryScreen.route) {
             CategoryScreen(
                 bottomBarActions = bottomBarActions,
-                onNavigateBack = { navController.popBackStack() },
+                onNavigateBack = {
+                    navController.popBackStack(Screen.AppSelectionScreen.route, inclusive = false)
+                },
                 onNavigateToContent = { category ->
                     // ✅ ارسال categoryId به جای کل category
                     navController.navigate(Screen.ContentScreen.passCategory(category.id))

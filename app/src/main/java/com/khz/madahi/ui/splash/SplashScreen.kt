@@ -45,7 +45,7 @@ import com.khz.madahi.utils.NetworkChecker
 fun SplashScreen(
     onNavigateToIntro: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    onNavigateToCategory: () -> Unit
+    onNavigateToAppSelection: () -> Unit
 ) {
     val context = LocalContext.current
     var showUpdateDialog by remember { mutableStateOf(false) }
@@ -79,7 +79,7 @@ fun SplashScreen(
             }
             is SplashState.NavigateToIntro -> onNavigateToIntro()
             is SplashState.NavigateToLogin -> onNavigateToLogin()
-            is SplashState.NavigateToCategory -> onNavigateToCategory()
+            is SplashState.NavigateToCategory -> onNavigateToAppSelection()
             else -> Unit
         }
     }
@@ -97,7 +97,7 @@ fun SplashScreen(
             when {
                 PreferencesManager(context).isFirstTimeLaunch -> onNavigateToIntro()
                 !PreferencesManager(context).isLoggedIn -> onNavigateToLogin()
-                else -> onNavigateToCategory()
+                else -> onNavigateToAppSelection()
             }
         }
     )
