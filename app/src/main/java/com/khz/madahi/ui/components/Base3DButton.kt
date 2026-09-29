@@ -48,7 +48,7 @@ data class Button3DPalette(
 
 internal val Btn3DShape = RoundedCornerShape(18.dp)
 
-private val ButtonSurfaceHeight = 58.dp
+private val ButtonSurfaceHeight = 45.dp
 private val ButtonDepth = 6.dp
 
 // ============================================================

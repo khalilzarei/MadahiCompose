@@ -26,27 +26,17 @@ import com.khz.madahi.ui.theme.TextPrimary
 
 @Composable
 fun Mini3DButton(
+    modifier: Modifier = Modifier,
     imageVector: ImageVector = Icons.Outlined.Delete,
     onClick: () -> Unit,
     tint: Color = TextPrimary
 ) {
-    val colors = LocalMadahiColors.current
-
     val interactionSource = remember {
         MutableInteractionSource()
     }
 
-    val pressed by interactionSource.collectIsPressedAsState()
-
-    val offset by animateDpAsState(
-        targetValue = if (pressed) 3.dp else 0.dp,
-        label = "mini_offset"
-    )
-
-    val shape = RoundedCornerShape(15.dp)
-
     GlassCard3D(
-        modifier = Modifier
+        modifier = modifier
             .size(54.dp)
             .clickable(
                 interactionSource = interactionSource,

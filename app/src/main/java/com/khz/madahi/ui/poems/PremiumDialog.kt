@@ -197,7 +197,7 @@ private fun PremiumFeaturesPreview() {
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            PremiumFeatures()
+            PremiumDialog(onDismiss = {})
         }
     }
 }

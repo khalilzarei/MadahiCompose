@@ -12,8 +12,8 @@ android {
         applicationId = "com.khz.madahi"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "1.7"
+        versionCode = 10
+        versionName = "2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

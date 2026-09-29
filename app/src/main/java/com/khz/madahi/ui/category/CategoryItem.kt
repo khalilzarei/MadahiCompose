@@ -58,12 +58,12 @@ fun CategoryItem(
     GlassCard3D(
         modifier = Modifier
             .fillMaxWidth()
-            .height(85.dp)
+            .height(65.dp)
             .clickable { onClick() }) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 14.dp),
+                .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

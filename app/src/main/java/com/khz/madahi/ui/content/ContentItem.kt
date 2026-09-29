@@ -46,7 +46,7 @@ fun ContentItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .height(80.dp)
+                .height(65.dp)
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -76,68 +76,8 @@ fun ContentItem(
                 }
             }
 
-            IconButton(
-                onClick = onClick, // با کلیک روی سه نقطه مستقیم CategoryDialog باز می‌شود
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = "ویرایش و گزینه‌ها",
-                    tint = Color(0xFFFFC107),
-                )
-            }
         }
 
-        // ============ سمت چپ: دکمه‌ها ============
-//                if (content.userId != "0") {
-//                    Row(
-//                        horizontalArrangement = Arrangement.spacedBy(20.dp),
-//                        modifier = Modifier.padding(16.dp)
-//                    ) {
-//                        // ✅ دکمه ویرایش
-//                        IconButton(
-//                            onClick = onEditClick,
-//                            modifier = Modifier
-//                                .size(50.dp)
-//                                .clip(CircleShape)
-//
-//                        ) {
-//                            Icon(
-//                                imageVector = Icons.Default.Edit,
-//                                contentDescription = "ویرایش",
-//                                modifier = Modifier.size(30.dp),
-//                            )
-//                        }
-//
-//                        // ✅ دکمه حذف
-//                        IconButton(
-//                            onClick = onDeleteClick,
-//                            modifier = Modifier
-//                                .size(50.dp)
-//                                .clip(CircleShape)
-//                                .background(
-//                                    Brush.radialGradient(
-//                                        colors = listOf(
-//                                            Color.Red.copy(alpha = 0.15f),
-//                                            Color.Transparent
-//                                        )
-//                                    )
-//                                )
-//                                .border(
-//                                    width = 1.dp,
-//                                    color = Color.Red.copy(alpha = 0.3f),
-//                                    shape = CircleShape
-//                                )
-//                        ) {
-//                            Icon(
-//                                imageVector = Icons.Default.Delete,
-//                                contentDescription = "حذف",
-//                                modifier = Modifier.size(30.dp),
-//                                tint = MaterialTheme.colorScheme.error
-//                            )
-//                        }
-//                    }
-//                }
     }
 }
 

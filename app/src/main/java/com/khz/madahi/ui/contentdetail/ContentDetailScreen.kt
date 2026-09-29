@@ -571,8 +571,8 @@ fun ContentDetailScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
-                                horizontal = 16.dp,
-                                vertical = 12.dp
+                                horizontal = 12.dp,
+                                vertical = 6.dp
                             ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
@@ -610,23 +610,21 @@ fun ContentDetailScreenContent(
                                 onClick = onAddAudioClick
                             )
                         }
-                        GlassCard3D(
+
+                        Box(
                             modifier = Modifier
                                 .size(54.dp)
-                                .clickable(onClick = onToggleFavorite)
+                                .clickable(onClick = onToggleFavorite),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = if (favoriteState is FavoriteState.Favorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                    contentDescription = null,
-                                    tint = if (favoriteState is FavoriteState.Favorite) colors.delete else colors.gold,
-                                    modifier = Modifier.size(26.dp)
-                                )
-                            }
+                            Icon(
+                                imageVector = if (favoriteState is FavoriteState.Favorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                tint = if (favoriteState is FavoriteState.Favorite) colors.delete else colors.gold,
+                                modifier = Modifier.size(30.dp)
+                            )
                         }
+
                     }
                 }
 

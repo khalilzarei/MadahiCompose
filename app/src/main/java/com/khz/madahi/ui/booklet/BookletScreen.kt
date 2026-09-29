@@ -234,7 +234,7 @@ private fun BookletSectionCard(
     GlassCard3D(
         modifier = Modifier
             .fillMaxWidth()
-            .height(85.dp)
+            .height(65.dp)
             .clickable { onClick() }) {
         Row(
             modifier = Modifier
