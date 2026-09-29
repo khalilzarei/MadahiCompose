@@ -1,8 +1,6 @@
 // ui/poems/PremiumDialog.kt
 package com.khz.madahi.ui.poems
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,54 +26,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.khz.madahi.data.local.preferences.PreferencesManager
-import com.khz.madahi.ui.common.BazaarBuyButton
+import com.khz.madahi.helper.SUPPORT_PHONE_NUMBER
+import com.khz.madahi.helper.openSupportContact
 import com.khz.madahi.ui.common.DialogFullscreenWindow
 import com.khz.madahi.ui.components.GlassCard3D
 import com.khz.madahi.ui.components.ThreeDButton
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
-import com.khz.madahi.ui.theme.gold
 import com.khz.madahi.ui.theme.textMuted
 import com.khz.madahi.ui.theme.textPrimary
-import kotlinx.coroutines.delay
-
-// ============================================================
-// دیالوگ فعال‌سازی نسخه پرو
-// ------------------------------------------------------------
-// خودکفا: PremiumViewModel خودش را می‌سازد، خرید بازار را
-// مدیریت می‌کند و بعد از فعال‌سازی موفق onActivated را صدا می‌زند
-// ============================================================
 
 @Composable
-fun PremiumDialog(
-    onDismiss: () -> Unit,
-    onActivated: () -> Unit
-) {
+fun PremiumDialog(onDismiss: () -> Unit) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Dialog(
             onDismissRequest = onDismiss,
             properties = DialogProperties(
                 usePlatformDefaultWidth = false,
-                decorFitsSystemWindows = false
+                decorFitsSystemWindows = true
             )
         ) {
             DialogFullscreenWindow()
 
             val context = LocalContext.current
             val colors = LocalMadahiColors.current
-            val viewModel: PremiumViewModel = viewModel(
-                factory = PremiumViewModelFactory(
-                    preferencesManager = PreferencesManager(context)
-                )
-            )
-            val state by viewModel.premiumState.collectAsState()
-            val invoiceState by viewModel.invoiceState.collectAsState()
 
             GlassCard3D(
                 modifier = Modifier
-                    .fillMaxWidth(0.86f)
+                    .fillMaxWidth(0.9f)
                     .padding(vertical = 24.dp)
             ) {
                 Column(
@@ -92,178 +65,43 @@ fun PremiumDialog(
                         ),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
-                    // ============ آیکون ============
                     Text(
-                        text = "🎧",
-                        fontSize = 48.sp
+                        text = "⭐",
+                        fontSize = 44.sp
                     )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    // ============ عنوان ============
+                    Spacer(Modifier.height(12.dp))
                     Text(
-                        text = "نسخه پرو",
+                        text = "اشتراک ویژه",
                         color = colors.textPrimary,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
-
-                    Spacer(Modifier.height(6.dp))
-
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "با یک خرید، برای همیشه فعال می‌شود",
+                        text = "با تهیه اشتراک، به این امکانات دسترسی دارید:",
                         color = colors.textMuted,
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(Modifier.height(20.dp))
 
-                    // ============ امکانات پرو ============
                     PremiumFeatures()
 
-                    Spacer(Modifier.height(24.dp))
-
-                    // ============ پیام خطا ============
-                    if (state is PremiumUiState.Error) {
-                        Text(
-                            text = "⚠️ ${(state as PremiumUiState.Error).message}",
-                            color = colors.gold,
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(Modifier.height(14.dp))
-                    }
-
-                    // ============ دکمه خرید / وضعیت پرداخت ============
-                    when {
-
-                        state is PremiumUiState.Activating      -> {
-                            ThreeDButton(
-                                text = "در حال فعال‌سازی…",
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = false,
-                                onClick = {})
-                        }
-
-                        invoiceState is InvoiceUiState.Waiting  -> {
-                            // ⏳ منتظر نتیجه پرداخت زرین‌پال
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = colors.gold,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(Modifier.width(10.dp))
-                                Text(
-                                    text = "پرداخت را در صفحه‌ای که باز شد انجام دهید",
-                                    color = colors.textPrimary,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                text = "بعد از پرداخت، وضعیت به‌صورت خودکار بررسی می‌شود",
-                                color = colors.textMuted,
-                                fontSize = 12.sp,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(Modifier.height(14.dp))
-                            ThreeDButton(
-                                text = "بررسی وضعیت",
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = { viewModel.checkPremium() })
-
-                            // ✅ چک خودکار هر ۵ ثانیه (تا ۱۲ بار)
-                            LaunchedEffect(Unit) {
-                                repeat(12) {
-                                    delay(5_000)
-                                    if (viewModel.premiumState.value is PremiumUiState.Pro) {
-                                        return@LaunchedEffect
-                                    }
-                                    viewModel.checkPremium()
-                                }
-                            }
-                        }
-
-                        invoiceState is InvoiceUiState.Creating -> {
-                            ThreeDButton(
-                                text = "در حال ساخت فاکتور…",
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = false,
-                                onClick = {})
-                        }
-
-                        else                                    -> {
-                            // نمایش خطا (مثلاً: «شما قبلاً نسخه پرو را فعال کرده‌اید»)
-                            if (invoiceState is InvoiceUiState.Error) {
-                                Text(
-                                    "⚠️ ${(invoiceState as InvoiceUiState.Error).message}",
-                                    color = colors.gold,
-                                    fontSize = 13.sp,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(Modifier.height(12.dp))
-                            }
-                            // دو کانال خرید
-                            BazaarBuyButton(
-                                text = "خرید از بازار",
-                                modifier = Modifier.fillMaxWidth(),
-                                onSuccess = { viewModel.activateFromBazaar(it) },
-                                onFail = {})
-                            Spacer(Modifier.height(10.dp))
-                            Text(
-                                text = "یا",
-                                color = colors.textMuted,
-                                fontSize = 12.sp
-                            )
-                            Spacer(Modifier.height(10.dp))
-                            ThreeDButton(
-                                text = "پرداخت از طریق زرین‌پال",
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = {
-                                    viewModel.startZarinpalPayment { payUrl, _ ->
-                                        if (payUrl != null) {
-                                            try {
-                                                context.startActivity(
-                                                    Intent(
-                                                        Intent.ACTION_VIEW,
-                                                        Uri.parse(payUrl)
-                                                    )
-                                                )
-                                            } catch (e: Exception) {
-                                                // مرورگر در دسترس نیست
-                                            }
-                                        }
-                                    }
-                                })
-                        }
-                    }
-
-                    // ============ پیام بعد از فعال‌سازی ============
-                    if (state is PremiumUiState.Pro) {
-                        Spacer(Modifier.height(16.dp))
-                        Text(
-                            text = "✅ نسخه پرو فعال شد",
-                            color = colors.gold,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        // دیالوگ را بعد از فعال‌سازی ببند
-                        LaunchedEffect(Unit) {
-                            onActivated()
-                        }
-                    }
-
-                    Spacer(Modifier.height(22.dp))
-
+                    Spacer(Modifier.height(20.dp))
+                    Text(
+                        text = "برای فعال‌سازی اشتراک، کافی است با پشتیبانی تماس بگیرید.",
+                        color = colors.textPrimary,
+                        fontSize = 14.sp,
+                        lineHeight = 22.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    ThreeDButton(
+                        text = "تماس با پشتیبانی  $SUPPORT_PHONE_NUMBER",
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { openSupportContact(context) })
+                    Spacer(Modifier.height(10.dp))
                     ThreeDButton(
                         text = "بستن",
                         modifier = Modifier.fillMaxWidth(),
@@ -275,27 +113,39 @@ fun PremiumDialog(
     }
 }
 
+@Composable
+fun PremiumSupportButton(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    ThreeDButton(
+        text = "تماس با پشتیبانی  $SUPPORT_PHONE_NUMBER",
+        modifier = modifier,
+        onClick = { openSupportContact(context) })
+}
+
 // ============================================================
-// لیست امکانات پرو — قابل استفاده در جاهای دیگر
+// لیست امکانات اشتراک ویژه
 // ============================================================
 
 @Composable
 fun PremiumFeatures() {
-    val colors = LocalMadahiColors.current
-
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         PremiumFeatureRow(
+            icon = "📚",
+            title = "دسترسی به کتابچه مداحی",
+            subtitle = "مشاهده و جست‌وجو در متن‌ها و شعرهای کتابچه"
+        )
+        PremiumFeatureRow(
             icon = "📜",
-            title = "نمایش شعرها با سبک‌ها",
-            subtitle = "لیست شعرهای ذخیره‌شده همراه با سبک (ویس) و پخش صوت"
+            title = "شعرها همراه با سبک و صوت",
+            subtitle = "مشاهده شعرهای ذخیره‌شده و پخش ویس آن‌ها"
         )
         PremiumFeatureRow(
             icon = "🎤",
             title = "افزودن ویس به شعر",
-            subtitle = "سبک مداحی دلخواه را به هر شعر اضافه کنید"
+            subtitle = "ضبط یا انتخاب فایل صوتی برای متن‌ها"
         )
     }
 }
@@ -316,18 +166,11 @@ private fun PremiumFeatureRow(
             text = icon,
             fontSize = 22.sp
         )
-
         Spacer(Modifier.width(12.dp))
-
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    top = 4.dp,
-                    bottom = 4.dp,
-                    start = 4.dp,
-                    end = 12.dp
-                )
+                .weight(1f)
+                .padding(vertical = 4.dp)
         ) {
             Text(
                 text = title,

@@ -256,7 +256,7 @@ private fun BookletPoemCard(
             ) {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -279,7 +279,6 @@ private fun BookletPoemCard(
                 imageVector = Icons.Default.ArrowBackIosNew,
                 contentDescription = "مشاهده شعر",
                 tint = Color(0xFFFFC107),
-                modifier = Modifier.size(34.dp)
             )
         }
     }

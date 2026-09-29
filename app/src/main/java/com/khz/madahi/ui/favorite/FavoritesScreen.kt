@@ -101,10 +101,8 @@ fun FavoritesScreen(
     BaseScreen(
         bottomBarActions = bottomBarActions,
         title = "علاقه مندی ها",
-        subtitle = "",
         selectedBottomTab = BottomTab.FAVORITES,
         isCategory = true,
-        onHeaderBottonClicked = {},
     ) {
         Box(
             modifier = Modifier.fillMaxSize()

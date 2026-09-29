@@ -69,30 +69,25 @@ fun SettingScreen(
     BaseScreen(
         bottomBarActions = bottomBarActions,
         title = "تنظیمات",
-        subtitle = "",
         selectedBottomTab = BottomTab.SETTINGS,
-        onHeaderBottonClicked = {},
     ) {
 
         //region BODY
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
 
             GlassCard3D {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                         .padding(16.dp)
                 ) {
                     // ✅ دارک مد
                     GlassCard3D {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                                 .padding(10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -153,12 +148,10 @@ fun SettingScreen(
                     val currentFontKey = preferencesManager.font
 
                     GlassCard3D(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                             .clickable { showFontDialog = true }) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -202,8 +195,7 @@ fun SettingScreen(
                                 // 🔄 بازسازی اکتیویتی تا فونت کل اپ عوض شود
                                 (context as? ComponentActivity)?.recreate()
                             },
-                            onDismiss = { showFontDialog = false }
-                        )
+                            onDismiss = { showFontDialog = false })
                     }
 
                     //endregion
@@ -218,8 +210,7 @@ fun SettingScreen(
 
                     GlassCard3D {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                                 .padding(10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -295,10 +286,9 @@ fun SettingScreen(
 
                     GlassCard3D {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { bottomBarActions.onAboutClick() }
-                                .padding(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                            .clickable { bottomBarActions.onAboutClick() }
+                            .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
                             Row(
@@ -334,10 +324,9 @@ fun SettingScreen(
 
                     GlassCard3D {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { bottomBarActions.onProfileClick() }
-                                .padding(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                            .clickable { bottomBarActions.onProfileClick() }
+                            .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
                             Row(

@@ -42,6 +42,7 @@ fun CategoryScreen(
     onNavigateToContent: (Category) -> Unit,
     bottomBarActions: BottomBarActions,
     onNavigateBack: () -> Unit = {},
+    onNavigateHome: () -> Unit = onNavigateBack,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -76,6 +77,7 @@ fun CategoryScreen(
         subtitle = "",
         selectedBottomTab = BottomTab.CATEGORY,
         onHeaderBottonClicked = { onNavigateBack() },
+        onHeaderHomeClicked = onNavigateHome,
         isCategory = true,
         onFabAddBottonClicked = {
             viewModel.showAddCategoryDialog()
@@ -112,7 +114,7 @@ fun CategoryScreen(
                         LazyColumn(
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 30.dp),
+                                .padding(horizontal = 15.dp),
                             contentPadding = PaddingValues(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             state = listState,

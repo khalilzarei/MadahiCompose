@@ -161,6 +161,10 @@ interface APIService {
         @Part audio: MultipartBody.Part
     ): ContentResponse
 
+    @FormUrlEncoded
+    @POST("removeAudio.php")
+    suspend fun removeAudio(@Field("content_id") contentId: Int): ContentResponse
+
     // ============ Premium (نسخه پرو) ============
     @FormUrlEncoded
     @POST("getPremiumStatus.php")

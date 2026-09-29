@@ -1,8 +1,6 @@
 // ui/about/AboutScreen.kt
 package com.khz.madahi.ui.about
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -34,6 +32,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.khz.madahi.BuildConfig
+import com.khz.madahi.helper.SUPPORT_PHONE_NUMBER
+import com.khz.madahi.helper.openSupportContact
 import com.khz.madahi.ui.common.BottomBarActions
 import com.khz.madahi.ui.common.BottomTab
 import com.khz.madahi.ui.components.BaseScreen
@@ -46,7 +46,6 @@ import com.khz.madahi.ui.theme.primaryDark
 import com.khz.madahi.ui.theme.textMuted
 import com.khz.madahi.ui.theme.textPrimary
 import com.khz.madahi.ui.theme.textSecondary
-import androidx.core.net.toUri
 
 // ============================================================
 // صفحه درباره ما — سبک شیشه‌ای و سه‌بعدی
@@ -150,16 +149,7 @@ fun AboutScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        // باز کردن شماره‌گیر با شماره پشتیبانی
-                        try {
-                            val intent = Intent(
-                                Intent.ACTION_DIAL,
-                                "tel:09362371808".toUri()
-                            )
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            // اگر Intent در دسترس نبود، کاری نمی‌کنیم
-                        }
+                        openSupportContact(context)
                     }) {
 
                 Row(
@@ -193,7 +183,7 @@ fun AboutScreen(
                         Spacer(Modifier.height(4.dp))
 
                         Text(
-                            text = "09362371808",
+                            text = SUPPORT_PHONE_NUMBER,
                             color = colors.textSecondary,
                             fontSize = 14.sp
                         )

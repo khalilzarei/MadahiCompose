@@ -1,8 +1,6 @@
 // ui/poems/PoemsScreen.kt
 package com.khz.madahi.ui.poems
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,14 +40,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.models.Content
-import com.khz.madahi.ui.common.BazaarBuyButton
 import com.khz.madahi.ui.common.BottomBarActions
 import com.khz.madahi.ui.common.BottomTab
 import com.khz.madahi.ui.common.ErrorContentScreen
 import com.khz.madahi.ui.components.BaseScreen
 import com.khz.madahi.ui.components.GlassCard3D
 import com.khz.madahi.ui.components.Mini3DButton
-import com.khz.madahi.ui.components.ThreeDButton
 import com.khz.madahi.ui.theme.LocalMadahiColors
 import com.khz.madahi.ui.theme.MadahiThemeGreen
 import com.khz.madahi.ui.theme.gold
@@ -62,7 +57,7 @@ import com.khz.madahi.ui.theme.textPrimary
 // ------------------------------------------------------------
 // - لیست شعرهای ذخیره‌شده همراه با سبک (ویس)
 // - پخش صوت (یک‌جا فقط یکی)
-// - اگر پرو فعال نباشد → کارت فعال‌سازی + دکمه خرید بازار
+// - اگر پرو فعال نباشد → معرفی امکانات و راه تماس با پشتیبانی
 // ============================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,7 +81,6 @@ fun PoemsScreen(
     val poems by viewModel.poems.collectAsState()
     val playingId by viewModel.playingId.collectAsState()
     val progress by viewModel.progress.collectAsState()
-    val invoiceState by viewModel.invoiceState.collectAsState()
 
     BaseScreen(
         bottomBarActions = bottomBarActions,
@@ -157,92 +151,16 @@ fun PoemsScreen(
                             )
                             Spacer(Modifier.height(22.dp))
                             PremiumFeatures()
-                            Spacer(Modifier.height(26.dp))
-
-                            // ============ کانال‌های خرید ============
-                            when {
-                                invoiceState is InvoiceUiState.Waiting -> {
-                                    // ⏳ منتظر نتیجه پرداخت زرین‌پال
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(20.dp),
-                                            color = colors.gold,
-                                            strokeWidth = 2.dp
-                                        )
-                                        Spacer(Modifier.width(10.dp))
-                                        Text(
-                                            text = "پرداخت را در صفحه‌ای که باز شد انجام دهید",
-                                            color = colors.textPrimary,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                    Spacer(Modifier.height(12.dp))
-                                    ThreeDButton(
-                                        text = "بررسی وضعیت",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = { viewModel.load() })
-                                }
-
-                                invoiceState is InvoiceUiState.Creating -> {
-                                    ThreeDButton(
-                                        text = "در حال ساخت فاکتور…",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        enabled = false,
-                                        onClick = {})
-                                }
-
-                                else -> {
-                                    // نمایش خطا (مثلاً: «شما قبلاً نسخه پرو را فعال کرده‌اید»)
-                                    if (invoiceState is InvoiceUiState.Error) {
-                                        Text(
-                                            text = "⚠️ ${(invoiceState as InvoiceUiState.Error).message}",
-                                            color = colors.gold,
-                                            fontSize = 13.sp,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                        Spacer(Modifier.height(10.dp))
-                                    }
-                                    BazaarBuyButton(
-                                        text = "فعال‌سازی از بازار",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onSuccess = { purchaseData ->
-                                            viewModel.activateFromBazaar(purchaseData)
-                                        },
-                                        onFail = {})
-                                    Spacer(Modifier.height(10.dp))
-                                    Text(
-                                        text = "یا",
-                                        color = colors.textMuted,
-                                        fontSize = 12.sp
-                                    )
-                                    Spacer(Modifier.height(10.dp))
-                                    ThreeDButton(
-                                        text = "پرداخت از طریق زرین‌پال",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = {
-                                            viewModel.startZarinpalPayment { payUrl, _ ->
-                                                if (payUrl != null) {
-                                                    try {
-                                                        context.startActivity(
-                                                            Intent(
-                                                                Intent.ACTION_VIEW,
-                                                                Uri.parse(payUrl)
-                                                            )
-                                                        )
-                                                    } catch (e: Exception) {
-                                                        // مرورگر در دسترس نیست
-                                                    }
-                                                }
-                                            }
-                                        })
-                                }
-                            }
+                            Spacer(Modifier.height(20.dp))
+                            Text(
+                                text = "برای تهیه و فعال‌سازی اشتراک ویژه با پشتیبانی تماس بگیرید.",
+                                color = colors.textMuted,
+                                fontSize = 14.sp,
+                                lineHeight = 24.sp,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(14.dp))
+                            PremiumSupportButton(modifier = Modifier.fillMaxWidth())
                         }
                     }
                 }

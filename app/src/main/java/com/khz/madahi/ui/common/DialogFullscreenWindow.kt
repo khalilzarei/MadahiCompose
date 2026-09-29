@@ -10,9 +10,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
 /**
- * داخل هر Dialog (یا AlertDialog) صدا بزن تا window دیالوگ هم
- * فول‌اسکرین بماند. بدون این، باز شدن دیالوگ نوارهای سیستم را
- * دوباره نشان می‌دهد و بعد از بستن هم گاهی برنمی‌گردند.
+ * داخل هر Dialog (یا AlertDialog) صدا بزن تا دیالوگ هم نوارهای
+ * وضعیت و پیمایش سیستم را نمایش دهد.
  *
  * استفاده:
  *   Dialog(...) {
@@ -29,21 +28,19 @@ fun DialogFullscreenWindow() {
         val window = (view.parent as? DialogWindowProvider)?.window
                 ?: return@SideEffect
 
-        // دیالوگ هم edge-to-edge شود
+        // دیالوگ با درنظرگرفتن نوارهای سیستم چیده شود.
         WindowCompat.setDecorFitsSystemWindows(
             window,
-            false
+            true
         )
 
-        // نوارهای سیستم داخل window دیالوگ مخفی شوند
         WindowInsetsControllerCompat(
             window,
             view
         ).apply {
-            hide(
+            show(
                 WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars()
             )
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
 }

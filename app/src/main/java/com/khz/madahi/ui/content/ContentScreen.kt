@@ -43,6 +43,7 @@ fun ContentScreen(
     category: Category?,
     bottomBarActions: BottomBarActions,
     onNavigateBack: () -> Unit,
+    onNavigateHome: () -> Unit = onNavigateBack,
     onNavigateToContentDetail: (Int) -> Unit
 ) {
     val context = LocalContext.current
@@ -106,6 +107,7 @@ fun ContentScreen(
         subtitle = "",
         selectedBottomTab = BottomTab.CATEGORY,
         onHeaderBottonClicked = { onNavigateBack() },
+        onHeaderHomeClicked = onNavigateHome,
         onFabAddBottonClicked = {
             viewModel.showAddDialog()
         },
@@ -132,8 +134,8 @@ fun ContentScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f)
-                                        .padding(horizontal = 30.dp),
-                                    contentPadding = PaddingValues(horizontal = 30.dp),
+                                        .padding(horizontal = 15.dp),
+                                    contentPadding = PaddingValues(horizontal = 15.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     items(

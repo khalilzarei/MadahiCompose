@@ -57,6 +57,7 @@ import kotlinx.coroutines.launch
 fun ContentDetailScreen(
     content: Content?,
     onNavigateBack: () -> Unit,
+    onNavigateHome: (() -> Unit)? = null,
     onFavoriteChanged: () -> Unit = {},
     isReadOnly: Boolean = false,
     publisherName: String? = null,
@@ -76,7 +77,8 @@ fun ContentDetailScreen(
             ) {
                 TopTitleBar(
                     title = "",
-                    onBack = onNavigateBack
+                    onBack = onNavigateBack,
+                    onHome = onNavigateHome
                 )
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -99,8 +101,10 @@ fun ContentDetailScreen(
             preferencesManager = PreferencesManager(context),
             contentRepository = ContentRepository(
                 apiService = RetrofitClient.apiService,
-                contentDao = AppDatabase.getInstance(context).contentDAO(),
-                favoriteDao = AppDatabase.getInstance(context).favoriteDAO()
+                contentDao = AppDatabase.getInstance(context)
+                    .contentDAO(),
+                favoriteDao = AppDatabase.getInstance(context)
+                    .favoriteDAO()
             ),
             appDatabase = AppDatabase.getInstance(context)
         )
@@ -117,6 +121,7 @@ fun ContentDetailScreen(
 
     // ============ وضعیت حذف ============
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showAudioDeleteDialog by remember { mutableStateOf(false) }
 
     // ============ وضعیت دیالوگ پرو (برای افزودن ویس) ============
     var showPremiumDialog by remember { mutableStateOf(false) }
@@ -129,7 +134,11 @@ fun ContentDetailScreen(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            viewModel.uploadAudio(context, content, uri)
+            viewModel.uploadAudio(
+                context,
+                content,
+                uri
+            )
         }
     }
 
@@ -185,8 +194,26 @@ fun ContentDetailScreen(
 
     // ============ متن نمایشی ============
     val displayContent = currentContent.content.replace(
-        "<p>", ""
-    ).replace("</p>", "").replace("<br>", "").replace("<br/>", "").replace("<br />", "").trim()
+        "<p>",
+        ""
+    )
+        .replace(
+            "</p>",
+            ""
+        )
+        .replace(
+            "<br>",
+            ""
+        )
+        .replace(
+            "<br/>",
+            ""
+        )
+        .replace(
+            "<br />",
+            ""
+        )
+        .trim()
 
     // ============ اشتراکگذاری ============
     val onShare = {
@@ -206,7 +233,12 @@ fun ContentDetailScreen(
             )
             type = "text/plain"
         }
-        context.startActivity(Intent.createChooser(shareIntent, "اشتراک گذاری محتوا"))
+        context.startActivity(
+            Intent.createChooser(
+                shareIntent,
+                "اشتراک گذاری محتوا"
+            )
+        )
     }
 
     // ============ UI (stateless) ============
@@ -228,8 +260,28 @@ fun ContentDetailScreen(
         onNavigateBack = onNavigateBack,
         onDeleteClick = { showDeleteDialog = true },
         onAddAudioClick = { requestAddAudio() },
-        onClearUploadError = { viewModel.clearUploadState() }
-    )
+        onDeleteAudioClick = { showAudioDeleteDialog = true },
+        onClearUploadError = { viewModel.clearUploadState() })
+
+    if (showAudioDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showAudioDeleteDialog = false },
+            title = { Text("حذف ویس") },
+            text = { Text("ویس این متن حذف شود؟") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAudioDeleteDialog = false
+                    viewModel.removeAudio(currentContent) { success, message ->
+                        if (success) currentContent = currentContent.copy(audioUrl = null)
+                        else deleteError = message
+                                ?: "حذف ویس ناموفق بود"
+                    }
+                }) { Text("حذف") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAudioDeleteDialog = false }) { Text("انصراف") }
+            })
+    }
 
     // ============ دیالوگ تأیید حذف ============
     if (showDeleteDialog) {
@@ -240,22 +292,15 @@ fun ContentDetailScreen(
                 viewModel.deleteContent(
                     content = content,
                     onSuccess = { onNavigateBack() },
-                    onError = { msg -> deleteError = msg }
-                )
+                    onError = { msg -> deleteError = msg })
             },
-            onDismiss = { showDeleteDialog = false }
-        )
+            onDismiss = { showDeleteDialog = false })
     }
 
     // ============ دیالوگ نسخه پرو ============
     if (showPremiumDialog) {
         PremiumDialog(
-            onDismiss = { showPremiumDialog = false },
-            onActivated = {
-                showPremiumDialog = false
-                showAddVoiceDialog = true
-            }
-        )
+            onDismiss = { showPremiumDialog = false })
     }
 
     // ============ دیالوگ افزودن ویس ============
@@ -264,10 +309,13 @@ fun ContentDetailScreen(
             content = content,
             onSend = { uri ->
                 showAddVoiceDialog = false
-                viewModel.uploadAudio(context, content, uri)
+                viewModel.uploadAudio(
+                    context,
+                    content,
+                    uri
+                )
             },
-            onDismiss = { showAddVoiceDialog = false }
-        )
+            onDismiss = { showAddVoiceDialog = false })
     }
 
     // ============ خطای حذف ============
@@ -278,8 +326,7 @@ fun ContentDetailScreen(
             text = { Text(message) },
             confirmButton = {
                 TextButton(onClick = { deleteError = null }) { Text("تأیید") }
-            }
-        )
+            })
     }
 
     // ============ دیالوگ آپلود مسدودکننده ============
@@ -308,6 +355,7 @@ fun ContentDetailScreenContent(
     onNavigateBack: () -> Unit,
     onDeleteClick: () -> Unit,
     onAddAudioClick: () -> Unit = {},
+    onDeleteAudioClick: () -> Unit = {},
     onClearUploadError: () -> Unit = {}
 ) {
     val colors = LocalMadahiColors.current
@@ -338,12 +386,14 @@ fun ContentDetailScreenContent(
                 TopTitleBar(
                     title = content.subject.ifBlank { "" },
                     subTitle = content.answer.ifBlank { " " },
-                    onBack = onNavigateBack
+                    onBack = onNavigateBack,
                 )
 
                 // ===== سبک • ناشر (برای شعرهای کتابچه) =====
-                val metaLine = listOf(style, publisherName)
-                    .filterNotNull()
+                val metaLine = listOf(
+                    style,
+                    publisherName
+                ).filterNotNull()
                     .filter { it.isNotBlank() }
                     .joinToString(" • ")
                 if (metaLine.isNotBlank()) {
@@ -374,9 +424,16 @@ fun ContentDetailScreenContent(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 22.dp, vertical = 24.dp)
+                            .padding(
+                                horizontal = 22.dp,
+                                vertical = 24.dp
+                            )
                     ) {
-                        Text("عنوان", color = colors.textSecondary, fontSize = 14.sp)
+                        Text(
+                            "عنوان",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
                         Spacer(Modifier.height(8.dp))
                         GlassTextField(
                             value = editSubject,
@@ -385,7 +442,11 @@ fun ContentDetailScreenContent(
                         )
 
                         Spacer(Modifier.height(14.dp))
-                        Text("جواب (اختیاری)", color = colors.textSecondary, fontSize = 14.sp)
+                        Text(
+                            "جواب (اختیاری)",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
                         Spacer(Modifier.height(8.dp))
                         GlassTextField(
                             value = editAnswer,
@@ -394,14 +455,25 @@ fun ContentDetailScreenContent(
                         )
 
                         Spacer(Modifier.height(14.dp))
-                        Text("متن", color = colors.textSecondary, fontSize = 14.sp)
+                        Text(
+                            "متن",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
                         Spacer(Modifier.height(8.dp))
 
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(colors.surfaceGlass.copy(alpha = 0.55f), RoundedCornerShape(18.dp))
-                                .border(1.dp, colors.border, RoundedCornerShape(18.dp))
+                                .background(
+                                    colors.surfaceGlass.copy(alpha = 0.55f),
+                                    RoundedCornerShape(18.dp)
+                                )
+                                .border(
+                                    1.dp,
+                                    colors.border,
+                                    RoundedCornerShape(18.dp)
+                                )
                                 .weight(1f)
                         ) {
                             BasicTextField(
@@ -410,7 +482,10 @@ fun ContentDetailScreenContent(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .verticalScroll(rememberScrollState())
-                                    .background(colors.surfaceGlass.copy(alpha = 0.55f), RoundedCornerShape(18.dp))
+                                    .background(
+                                        colors.surfaceGlass.copy(alpha = 0.55f),
+                                        RoundedCornerShape(18.dp)
+                                    )
                                     .padding(14.dp),
                                 textStyle = TextStyle(
                                     color = colors.textPrimary,
@@ -437,16 +512,14 @@ fun ContentDetailScreenContent(
                     Gold3DButton(
                         text = "انصراف",
                         modifier = Modifier.weight(1f),
-                        onClick = { isEditing = false }
-                    )
+                        onClick = { isEditing = false })
                     ThreeDButton(
                         text = "ذخیره",
                         modifier = Modifier.weight(1f),
                         onClick = {
                             // اینجا باید به ViewModel وصل شود
                             isEditing = false
-                        }
-                    )
+                        })
                 }
 
             } else {
@@ -462,7 +535,10 @@ fun ContentDetailScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 22.dp, vertical = 26.dp),
+                            .padding(
+                                horizontal = 22.dp,
+                                vertical = 26.dp
+                            ),
                         color = colors.textPrimary,
                         fontSize = fontSize.sp,
                         lineHeight = (fontSize * 1.8f).sp,
@@ -474,7 +550,10 @@ fun ContentDetailScreenContent(
 
                 // ============ 🎧 پلیر ویس ============
                 if (!content.audioUrl.isNullOrBlank()) {
-                    VoicePlayerCard(audioUrl = content.audioUrl!!)
+                    VoicePlayerCard(
+                        audioUrl = content.audioUrl!!,
+                        onDelete = onDeleteAudioClick
+                    )
                     Spacer(Modifier.height(10.dp))
                 }
 
@@ -482,12 +561,19 @@ fun ContentDetailScreenContent(
                 GlassCard3D(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, bottom = 12.dp)
+                        .padding(
+                            start = 24.dp,
+                            end = 24.dp,
+                            bottom = 12.dp
+                        )
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 12.dp
+                            ),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -529,7 +615,10 @@ fun ContentDetailScreenContent(
                                 .size(54.dp)
                                 .clickable(onClick = onToggleFavorite)
                         ) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Icon(
                                     imageVector = if (favoriteState is FavoriteState.Favorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                     contentDescription = null,
@@ -552,7 +641,10 @@ fun ContentDetailScreenContent(
                         fontSize = 12.sp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 4.dp)
+                            .padding(
+                                horizontal = 24.dp,
+                                vertical = 4.dp
+                            )
                     )
                 }
             }

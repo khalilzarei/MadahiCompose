@@ -17,9 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Note
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Note
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -52,12 +50,8 @@ import com.khz.madahi.ui.theme.MadahiThemeGreen
 import com.khz.madahi.ui.theme.gold
 import com.khz.madahi.ui.theme.goldLight
 import com.khz.madahi.ui.theme.primaryDark
-import com.khz.madahi.ui.theme.primaryLight
-import com.khz.madahi.ui.theme.surfaceGlass
-import com.khz.madahi.ui.theme.surfaceGlassLight
 import com.khz.madahi.ui.theme.textMuted
 import com.khz.madahi.ui.theme.textPrimary
-import com.khz.madahi.ui.theme.textSecondary
 
 // ============================================================
 // صفحه انتخاب بخش — بعد از ورود نمایش داده می‌شود
@@ -82,6 +76,32 @@ fun AppSelectionScreen(
     )
     val isPremium by viewModel.isPremium.collectAsState()
 
+    AppSelectionContent(
+        isPremium = isPremium,
+        onNavigateToCategory = onNavigateToCategory,
+        onNavigateToBooklet = {
+            if (isPremium) {
+                onNavigateToBooklet()
+            } else {
+                showPremiumDialog = true
+            }
+        })
+
+    // ============ دیالوگ پرمیوم ============
+    if (showPremiumDialog) {
+        PremiumDialog(
+            onDismiss = { showPremiumDialog = false },
+        )
+
+    }
+}
+
+@Composable
+private fun AppSelectionContent(
+    isPremium: Boolean,
+    onNavigateToCategory: () -> Unit,
+    onNavigateToBooklet: () -> Unit
+) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         MadahiBackground {
             val colors = LocalMadahiColors.current
@@ -89,11 +109,13 @@ fun AppSelectionScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 48.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(
+                        horizontal = 24.dp,
+                        vertical = 24.dp
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                // ============ عنوان ============
                 Text(
                     text = "مداحی",
                     color = colors.textPrimary,
@@ -106,12 +128,12 @@ fun AppSelectionScreen(
                 Text(
                     text = "بخش مورد نظر خود را انتخاب کنید",
                     color = colors.textMuted,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(Modifier.height(36.dp))
 
-                // ============ کارت دفترچه ============
                 SelectionCard(
                     icon = {
                         Icon(
@@ -129,7 +151,6 @@ fun AppSelectionScreen(
 
                 Spacer(Modifier.height(18.dp))
 
-                // ============ کارت کتابچه ============
                 SelectionCard(
                     icon = {
                         Icon(
@@ -142,28 +163,10 @@ fun AppSelectionScreen(
                     title = "کتابچه",
                     subtitle = if (isPremium) "کتابچه مداحی" else "ویژه نسخه پرمیوم",
                     badge = if (!isPremium) "پرمیوم" else null,
-                    onClick = {
-                        if (isPremium) {
-                            onNavigateToBooklet()
-                        } else {
-                            showPremiumDialog = true
-                        }
-                    }
+                    onClick = onNavigateToBooklet
                 )
             }
         }
-    }
-
-    // ============ دیالوگ پرمیوم ============
-    if (showPremiumDialog) {
-        PremiumDialog(
-            onDismiss = { showPremiumDialog = false },
-            onActivated = {
-                showPremiumDialog = false
-                viewModel.refreshPremium()
-                onNavigateToBooklet()
-            }
-        )
     }
 }
 
@@ -189,7 +192,10 @@ private fun SelectionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 24.dp),
+                .padding(
+                    horizontal = 22.dp,
+                    vertical = 24.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // آیکون
@@ -241,7 +247,10 @@ private fun SelectionCard(
                                     ),
                                     shape = RoundedCornerShape(8.dp)
                                 )
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                .padding(
+                                    horizontal = 10.dp,
+                                    vertical = 4.dp
+                                )
                         ) {
                             Text(
                                 text = label,
@@ -262,13 +271,6 @@ private fun SelectionCard(
                 )
             }
 
-            // فلش ورودی
-            Text(
-                text = "‹",
-                color = colors.gold,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }
@@ -281,9 +283,9 @@ private fun SelectionCard(
 @Composable
 private fun AppSelectionScreenPreview() {
     MadahiThemeGreen(darkTheme = true) {
-        // Preview with local colors - simplified
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Just a placeholder for preview
-        }
+        AppSelectionContent(
+            isPremium = true,
+            onNavigateToCategory = {},
+            onNavigateToBooklet = {})
     }
 }

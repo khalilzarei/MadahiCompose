@@ -28,10 +28,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // =====================================================
-        // Full Screen / Edge To Edge
+        // System bars
         // =====================================================
 
-        setupFullscreen()
+        setupSystemBars()
 
         // =====================================================
         // Preferences
@@ -67,59 +67,32 @@ class MainActivity : ComponentActivity() {
     }
 
     // =========================================================
-    // Fullscreen
+    // System bars
     // =========================================================
 
     // =====================================================
-// Full Screen — بعد از هر بار برگشت focus، دوباره مخفی کن
-// (دیالوگ‌ها، کیبورد، خروج از اپ و ...)
+// Keep the status and navigation bars visible after dialogs or focus changes.
 // =====================================================
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
-            WindowInsetsControllerCompat(
-                window,
-                window.decorView
-            ).apply {
-                hide(
-                    WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars()
-                )
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            }
+            setupSystemBars()
         }
     }
 
-    private fun setupFullscreen() {
-
-        /*
-         * اجازه می‌دهیم Compose تمام فضای Window
-         * را در اختیار داشته باشد.
-         */
-
+    private fun setupSystemBars() {
         WindowCompat.setDecorFitsSystemWindows(
             window,
-            false
+            true
         )
-
-        /*
-         * کنترل System Barها
-         */
 
         val controller = WindowInsetsControllerCompat(
             window,
             window.decorView
         )
-
-        controller.hide(
+        controller.show(
             WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars()
         )
-
-        /*
-         * اگر کاربر از لبه صفحه Swipe کند،
-         * System Barها موقتاً نمایش داده می‌شوند.
-         */
-
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     // =========================================================

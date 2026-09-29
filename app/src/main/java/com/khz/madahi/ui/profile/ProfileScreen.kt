@@ -107,14 +107,11 @@ fun ProfileScreen(
     BaseScreen(
         bottomBarActions = bottomBarActions,
         title = "پروفایل",
-        subtitle = "",
         selectedBottomTab = BottomTab.PROFILE,
-        onHeaderBottonClicked = {},
     ) {
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 16.dp)
         ) {
@@ -125,17 +122,18 @@ fun ProfileScreen(
             ) {
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                         .padding(26.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
                     // آواتار — حرف اول نام
                     Box(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .shadow(18.dp, CircleShape)
+                        modifier = Modifier.size(96.dp)
+                            .shadow(
+                                18.dp,
+                                CircleShape
+                            )
                             .background(
                                 Brush.radialGradient(
                                     listOf(
@@ -148,7 +146,10 @@ fun ProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stats.fullName.trim().firstOrNull()?.toString() ?: "؟",
+                            text = stats.fullName.trim()
+                                .firstOrNull()
+                                ?.toString()
+                                    ?: "؟",
                             color = colors.goldLight,
                             fontSize = 44.sp,
                             fontWeight = FontWeight.Bold
@@ -182,8 +183,7 @@ fun ProfileScreen(
                 when (uiState) {
                     is ProfileUiState.Loading -> {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                                 .height(90.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -193,7 +193,7 @@ fun ProfileScreen(
                         }
                     }
 
-                    else -> {
+                    else                      -> {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -229,8 +229,7 @@ fun ProfileScreen(
                 Delete3DButton(
                     text = "خروج از حساب",
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { showLogoutDialog = true }
-                )
+                    onClick = { showLogoutDialog = true })
             } else {
 
                 // ============ حالت مهمان ============
@@ -247,8 +246,7 @@ fun ProfileScreen(
                 text = "ساخته‌شده با ❤️",
                 color = colors.textMuted,
                 fontSize = 12.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
                     .padding(bottom = 4.dp),
                 textAlign = TextAlign.Center
             )

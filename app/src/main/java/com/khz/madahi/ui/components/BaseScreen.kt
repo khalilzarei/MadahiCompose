@@ -23,6 +23,7 @@ fun BaseScreen(
     title: String,
     subtitle: String = "",
     onHeaderBottonClicked: () -> Unit = {},
+    onHeaderHomeClicked: (() -> Unit)? = null,
     onFabAddBottonClicked: () -> Unit = {},
     selectedBottomTab: BottomTab,
     isCategory: Boolean = false,
@@ -36,7 +37,8 @@ fun BaseScreen(
                 title = title,
                 subTitle = subtitle,
                 onBack = onHeaderBottonClicked,
-                isCategory = isCategory
+                isCategory = isCategory,
+                onHome = onHeaderHomeClicked
             )
 
             Box(

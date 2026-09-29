@@ -88,10 +88,8 @@ fun MessageScreen(
     BaseScreen(
         bottomBarActions = bottomBarActions,
         title = "پیام‌ها",
-        subtitle = "",
         selectedBottomTab = BottomTab.MESSAGE,
         isCategory = true,
-        onHeaderBottonClicked = {},
     ) {
 
         when (uiState) {
@@ -123,8 +121,7 @@ fun MessageScreen(
 
                     // ============ حالت خالی ============
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
+                        modifier = Modifier.fillMaxSize()
                             .padding(40.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -155,8 +152,7 @@ fun MessageScreen(
                         items(messages) { message ->
 
                             GlassCard3D(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth()
                                     .clickable { selectedMessage = message }) {
 
                                 Column(

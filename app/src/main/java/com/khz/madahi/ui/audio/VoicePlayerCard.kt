@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -39,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +69,8 @@ import java.util.Locale
  */
 @Composable
 fun VoicePlayerCard(
-    audioUrl: String
+    audioUrl: String,
+    onDelete: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val colors = LocalMadahiColors.current
@@ -212,97 +214,111 @@ fun VoicePlayerCard(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // ============ دکمه پخش/توقف (یکپارچه) ============
-                Box(
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Row(
                     modifier = Modifier
-                        .size(46.dp)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    colors.goldLight,
-                                    colors.gold
-                                )
-                            ),
-                            CircleShape
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Color.White.copy(alpha = 0.3f),
-                            shape = CircleShape
-                        )
-                        .clickable(enabled = isReady) { toggle() },
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (!isReady && loadError == null) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = colors.primaryDark,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = if (isPlaying) {
-                                Icons.Default.Pause
-                            } else {
-                                Icons.Default.PlayArrow
-                            },
-                            contentDescription = if (isPlaying) "توقف" else "پخش",
-                            tint = colors.primaryDark,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                }
-
-                Spacer(Modifier.width(14.dp))
-
-                // ============ اطلاعات + اسلایدر ============
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "🎧 ویس شعر",
-                            color = colors.textPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = if (isReady) {
-                                "${formatVoiceTime(positionMs)} / ${formatVoiceTime(durationMs)}"
-                            } else {
-                                "—"
-                            },
-                            color = colors.textMuted,
-                            fontSize = 12.sp
-                        )
-                    }
-
-                    Spacer(Modifier.height(6.dp))
-
-                    // ============ اسلایدر جلو/عقب ============
-                    Slider(
-                        value = fraction,
-                        onValueChange = { seekTo(it) },
-                        enabled = isReady,
-                        colors = SliderDefaults.colors(
-                            thumbColor = colors.gold,
-                            activeTrackColor = colors.gold,
-                            inactiveTrackColor = colors.surfaceGlass
-                        ),
+                    // ============ دکمه پخش/توقف (یکپارچه) ============
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(32.dp)
-                    )
+                            .size(46.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        colors.goldLight,
+                                        colors.gold
+                                    )
+                                ),
+                                CircleShape
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.3f),
+                                shape = CircleShape
+                            )
+                            .clickable(enabled = isReady) { toggle() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (!isReady && loadError == null) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = colors.primaryDark,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = if (isPlaying) {
+                                    Icons.Default.Pause
+                                } else {
+                                    Icons.Default.PlayArrow
+                                },
+                                contentDescription = if (isPlaying) "توقف" else "پخش",
+                                tint = colors.primaryDark,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.width(14.dp))
+
+                    // ============ اطلاعات + اسلایدر ============
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🎧 ویس شعر",
+                                    color = colors.textPrimary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (isReady) {
+                                        "${formatVoiceTime(positionMs)} / ${formatVoiceTime(durationMs)}"
+                                    } else {
+                                        "—"
+                                    },
+                                    color = colors.textMuted,
+                                    fontSize = 12.sp
+                                )
+                            }
+
+                            Spacer(Modifier.height(6.dp))
+
+                            // ============ اسلایدر جلو/عقب ============
+                            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+
+                                Slider(
+                                    value = fraction,
+                                    onValueChange = { seekTo(it) },
+                                    enabled = isReady,
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = colors.gold,
+                                        activeTrackColor = colors.gold,
+                                        inactiveTrackColor = colors.surfaceGlass
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(32.dp)
+                                )
+                            }
+                        }
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "حذف ویس",
+                            tint = colors.delete
+                        )
+                    }
                 }
             }
 

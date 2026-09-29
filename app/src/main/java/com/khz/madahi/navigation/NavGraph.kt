@@ -201,6 +201,12 @@ fun NavGraph(
                         inclusive = false
                     )
                 },
+                onNavigateHome = {
+                    navController.navigate(Screen.AppSelectionScreen.route) {
+                        popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
                 onNavigateToSection = { sectionId, sectionTitle ->
                     navController.navigate(
                         Screen.BookletDetail.passSection(
@@ -216,7 +222,8 @@ fun NavGraph(
             route = Screen.BookletDetail.route,
             arguments = listOf(
                 androidx.navigation.navArgument("sectionId") { type = NavType.IntType },
-                androidx.navigation.navArgument("sectionTitle") { type = NavType.StringType })) { backStackEntry ->
+                androidx.navigation.navArgument("sectionTitle") { type = NavType.StringType })
+        ) { backStackEntry ->
             val sectionId = backStackEntry.arguments?.getInt("sectionId")
                     ?: 0
             val sectionTitle = backStackEntry.arguments?.getString("sectionTitle")
@@ -235,7 +242,8 @@ fun NavGraph(
         composable(
             route = Screen.BookletContent.route,
             arguments = listOf(
-                navArgument("contentId") { type = NavType.StringType })) { backStackEntry ->
+                navArgument("contentId") { type = NavType.StringType })
+        ) { backStackEntry ->
             val contentId = backStackEntry.arguments?.getString("contentId")
                 ?.toIntOrNull()
                     ?: 0
@@ -268,6 +276,12 @@ fun NavGraph(
                 ContentDetailScreen(
                     content = libraryContent?.toContent(),
                     onNavigateBack = { navController.popBackStack() },
+                    onNavigateHome = {
+                        navController.navigate(Screen.AppSelectionScreen.route) {
+                            popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
                     isReadOnly = true,
                     publisherName = libraryContent?.publisherName,
                     style = libraryContent?.style
@@ -284,6 +298,12 @@ fun NavGraph(
                         Screen.AppSelectionScreen.route,
                         inclusive = false
                     )
+                },
+                onNavigateHome = {
+                    navController.navigate(Screen.AppSelectionScreen.route) {
+                        popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
                 },
                 onNavigateToContent = { category ->
                     // ✅ ارسال categoryId به جای کل category
@@ -325,6 +345,12 @@ fun NavGraph(
                 ContentScreen(
                     category = category,
                     onNavigateBack = { navController.popBackStack() },
+                    onNavigateHome = {
+                        navController.navigate(Screen.AppSelectionScreen.route) {
+                            popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
                     bottomBarActions = bottomBarActions,
                     onNavigateToContentDetail = { contentId ->
                         navController.navigate(Screen.ContentDetail.passContent(contentId))
@@ -348,9 +374,18 @@ fun NavGraph(
                 key1 = contentId
             ) {
                 value = try {
-                    true to AppDatabase.getInstance(context)
+                    val localContent = AppDatabase.getInstance(context)
                         .contentDAO()
                         .getById(contentId)
+
+                    // علاقه‌مندی‌های کتابچه از سرور می‌آیند و در جدول محلی دفترچه نیستند.
+                    val content = localContent
+                            ?: when (val result = BookletRepository(RetrofitClient.apiService).getContent(contentId)) {
+                                is Result.Success -> result.data.toContent()
+                                else              -> null
+                            }
+
+                    true to content
                 } catch (e: Exception) {
                     true to null
                 }
@@ -368,6 +403,12 @@ fun NavGraph(
                 ContentDetailScreen(
                     content = detailContent,
                     onNavigateBack = { navController.popBackStack() },
+                    onNavigateHome = {
+                        navController.navigate(Screen.AppSelectionScreen.route) {
+                            popUpTo(Screen.AppSelectionScreen.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
                     onFavoriteChanged = {
                         // وقتی علاقه‌مندی تغییر کرد، صفحه‌ی Favorites با
                         // LifecycleEventObserver خودش (ON_RESUME) رفرش می‌شود.

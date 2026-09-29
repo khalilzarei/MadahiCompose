@@ -1,6 +1,5 @@
 package com.khz.madahi.data.remote.repository
 
-import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -22,6 +21,17 @@ class ContentRepository(
     private val contentDao: ContentDAO,
     private val favoriteDao: FavoriteDAO
 ) {
+
+    suspend fun removeAudio(contentId: Int): Result<Unit> = try {
+        val response = apiService.removeAudio(contentId)
+        if (response.error) Result.Error(
+            response.errorMsg
+                    ?: "حذف ویس ناموفق بود"
+        )
+        else Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Error("خطا در حذف ویس: ${e.message}")
+    }
 
     companion object {
         private const val TAG = "ContentRepository"
@@ -375,14 +385,16 @@ class ContentRepository(
                         "removeFavorite: removed from server ✅"
                     )
                 }
-                "added" -> {
+
+                "added"   -> {
                     // سرور فیوریت را مجدداً اضافه کرد (ممکن است سرور toggle کند)
                     Log.w(
                         TAG,
                         "removeFavorite: server re-added favorite, removing from local DB anyway"
                     )
                 }
-                else -> {
+
+                else      -> {
                     Log.d(
                         TAG,
                         "removeFavorite: action=${response.action}"
@@ -450,7 +462,7 @@ class ContentRepository(
             val action = response.action
 
             when (action) {
-                "added" -> {
+                "added"   -> {
                     Log.d(
                         TAG,
                         "toggleFavorite: added ✅"
@@ -470,7 +482,7 @@ class ContentRepository(
                     Result.Success(null)
                 }
 
-                else -> {
+                else      -> {
                     if (favorite != null) {
                         favoriteDao.insert(favorite)
                         Result.Success(favorite)
@@ -681,8 +693,6 @@ class ContentRepository(
             }
         }
     }
-
-
 
     private fun mimeFromExtension(fileName: String): String {
         val ext = fileName.substringAfterLast(

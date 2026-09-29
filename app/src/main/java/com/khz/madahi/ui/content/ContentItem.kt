@@ -58,7 +58,7 @@ fun ContentItem(
             ) {
                 Text(
                     text = content.subject,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleSmall,
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -71,7 +71,6 @@ fun ContentItem(
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.primaryLight,
                         maxLines = 1,
-                        fontSize = 12.sp,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -85,7 +84,6 @@ fun ContentItem(
                     imageVector = Icons.Default.ArrowBackIosNew,
                     contentDescription = "ویرایش و گزینه‌ها",
                     tint = Color(0xFFFFC107),
-                    modifier = Modifier.size(34.dp)
                 )
             }
         }

@@ -53,6 +53,7 @@ import com.khz.madahi.ui.theme.textPrimary
 @Composable
 fun BookletScreen(
     onNavigateBack: () -> Unit,
+    onNavigateHome: () -> Unit = onNavigateBack,
     onNavigateToSection: (Int, String) -> Unit
 ) {
     val viewModel: BookletViewModel = viewModel(
@@ -88,7 +89,9 @@ fun BookletScreen(
             TopTitleBar(
                 title = "کتابچه",
                 subTitle = "اشعار و مراثی",
-                onBack = onNavigateBack
+                onBack = onNavigateBack,
+                isCategory = true,
+                onHome = onNavigateHome
             )
 
             // ============ جستجو ============
@@ -249,7 +252,7 @@ private fun BookletSectionCard(
             ) {
                 Text(
                     text = section.title,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -266,12 +269,6 @@ private fun BookletSectionCard(
                 )
             }
 
-            // فلش
-            Text(
-                text = ">",
-                color = colors.gold,
-                fontSize = 28.sp
-            )
         }
     }
 }

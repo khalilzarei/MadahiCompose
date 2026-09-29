@@ -392,11 +392,6 @@ class ContentDetailViewModel(
             onResult(true)
             return
         }
-        if (cached is PremiumUiState.Guest) {
-            onResult(false)
-            return
-        }
-
         viewModelScope.launch {
             val userId = preferencesManager.user?.id
                     ?: GUEST_USER_ID
@@ -454,7 +449,10 @@ class ContentDetailViewModel(
                     try {
                         val audioUrl = result.data.audioUrl
                         appDatabase.contentDAO()
-                            .updateAudioUrl(content.id, audioUrl)
+                            .updateAudioUrl(
+                                content.id,
+                                audioUrl
+                            )
                         logD("uploadAudio: local DB updated via updateAudioUrl, audioUrl=$audioUrl")
                     } catch (e: Exception) {
                         logE("uploadAudio: local update error $e")
@@ -493,6 +491,34 @@ class ContentDetailViewModel(
 
     fun clearUploadState() {
         _uploadState.value = UploadState.Idle
+    }
+
+    fun removeAudio(
+        content: Content,
+        onComplete: (Boolean, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            when (val result = contentRepository.removeAudio(content.id)) {
+                is Result.Success -> {
+                    appDatabase.contentDAO()
+                        .updateAudioUrl(
+                            content.id,
+                            null
+                        )
+                    onComplete(
+                        true,
+                        null
+                    )
+                }
+
+                is Result.Error   -> onComplete(
+                    false,
+                    result.message
+                )
+
+                is Result.Loading -> Unit
+            }
+        }
     }
 }
 

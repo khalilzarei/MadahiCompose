@@ -76,7 +76,7 @@ fun CategoryItem(
             ) {
                 Text(
                     text = category.title,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
