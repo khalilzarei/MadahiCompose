@@ -31,7 +31,6 @@ class SplashViewModel(
         viewModelScope.launch {
             _state.value = SplashState.Loading
 
-
             // ✅ بررسی اتصال اینترنت
             if (!networkChecker.isNetworkConnected()) {
                 // اگر اینترنت قطع است، بدون بررسی نسخه به صفحه بعد برو
@@ -71,15 +70,21 @@ class SplashViewModel(
     // ui/splash/SplashViewModel.kt
     private fun navigateBasedOnUserState() {
         when {
-            preferencesManager.isFirstTimeLaunch -> {
+            preferencesManager.isFirstTimeLaunch  -> {
                 _state.value = SplashState.NavigateToIntro  // ✅ به Intro برو
             }
 
-            !preferencesManager.isLoggedIn       -> {
+            !preferencesManager.isLoggedIn        -> {
                 _state.value = SplashState.NavigateToLogin
             }
 
-            else                                 -> {
+            // ✅ رمز اولیه هنوز عوض نشده؛ سرور بقیهٔ APIها را بسته است،
+            // پس باید اول به صفحهٔ تغییر رمز برویم.
+            preferencesManager.mustChangePassword -> {
+                _state.value = SplashState.NavigateToChangePassword
+            }
+
+            else                                  -> {
                 _state.value = SplashState.NavigateToCategory
             }
         }

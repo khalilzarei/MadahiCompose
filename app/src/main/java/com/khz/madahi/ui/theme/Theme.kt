@@ -1,6 +1,6 @@
-// ui/theme/Theme.kt
 package com.khz.madahi.ui.theme
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +8,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -15,28 +16,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.core.view.WindowCompat
 import com.khz.madahi.data.local.preferences.PreferencesManager
-
-// ============================================================
-// Preferences
-// ============================================================
 
 val LocalPreferences = compositionLocalOf<PreferencesManager> {
     error("PreferencesManager not provided")
 }
 
-// ============================================================
-// Local ColorScheme
-// ============================================================
-
 val LocalMadahiColors = staticCompositionLocalOf<ColorScheme> {
     LightMadahiColorsScheme
 }
-
-// ============================================================
-// Theme اصلی
-// ============================================================
 
 @Composable
 fun MadahiThemeGreen(
@@ -49,12 +40,6 @@ fun MadahiThemeGreen(
         PreferencesManager(context)
     }
 
-    /*
-     * اگر کاربر در تنظیمات حالت شب را فعال کرده باشد،
-     * DarkTheme اولویت دارد.
-     *
-     * در غیر این صورت از darkTheme استفاده می‌کنیم.
-     */
     val isDark = preferences.isNightMode || darkTheme
 
     val colors = if (isDark) {
@@ -63,9 +48,24 @@ fun MadahiThemeGreen(
         LightMadahiColorsScheme
     }
 
-    val fontFamily = FontCatalog.fontFamilyFor(
-        preferences.font
-    )
+    val fontFamily = FontCatalog.fontFamilyFor(preferences.font)
+
+    // تنظیم خودکار رنگ آیکون‌های ساعت و نوار سیستم بر اساس تم
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (context as? Activity)?.window
+            window?.let {
+                val insetsController = WindowCompat.getInsetsController(
+                    it,
+                    view
+                )
+                // اگر تم تاریک باشد آیکون‌ها سفید، اگر روشن باشد آیکون‌ها تیره می‌شوند
+                insetsController.isAppearanceLightStatusBars = !isDark
+                insetsController.isAppearanceLightNavigationBars = !isDark
+            }
+        }
+    }
 
     CompositionLocalProvider(
         LocalPreferences provides preferences,
@@ -80,11 +80,6 @@ fun MadahiThemeGreen(
     }
 }
 
-// ============================================================
-// Theme قدیمی
-// برای سازگاری با کدهای قبلی پروژه
-// ============================================================
-
 @Composable
 fun MadahiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -96,6 +91,7 @@ fun MadahiTheme(
     )
 }
 
+// ... بقیه کدهای ColorScheme و Extension ها بدون تغییر باقی می‌مانند ...
 // ============================================================
 // Dark Color Scheme
 // ============================================================

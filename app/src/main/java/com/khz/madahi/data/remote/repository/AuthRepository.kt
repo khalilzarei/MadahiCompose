@@ -3,6 +3,7 @@ package com.khz.madahi.data.remote.repository
 import com.khz.madahi.data.remote.api.APIService
 import com.khz.madahi.helper.extention.logD
 import com.khz.madahi.helper.extention.logE
+import com.khz.madahi.models.response.ChangePasswordResponse
 import com.khz.madahi.models.response.LoginResponse
 import com.khz.madahi.utils.Result
 
@@ -10,13 +11,20 @@ class AuthRepository(
     private val apiService: APIService
 ) {
 
-    suspend fun login(mobile: String): Result<LoginResponse> {
+    suspend fun login(
+        mobile: String,
+        password: String
+    ): Result<LoginResponse> {
 
         return runCatching {
 
-            val response = apiService.login(mobile)
+            val response = apiService.login(
+                mobile,
+                password
+            )
 
-            logD("login response $response")
+            // ⚠️ رمز عبور عمداً لاگ نمی‌شود
+            logD("login response error=${response.error}, mustChangePassword=${response.mustChangePassword}")
 
             if (response.error == true) {
 
@@ -25,6 +33,45 @@ class AuthRepository(
                             ?: "خطا"
                 )
 
+            }
+
+            Result.Success(response)
+
+        }.getOrElse {
+
+            Result.Error(
+                it.message
+                        ?: "Unknown Error"
+            )
+
+        }
+
+    }
+
+    /**
+     * تغییر رمز عبور کاربر واردشده.
+     * برای کاربرانی که تازه وارد شده‌اند، [currentPassword] همان شمارهٔ موبایل است.
+     */
+    suspend fun changePassword(
+        currentPassword: String,
+        newPassword: String
+    ): Result<ChangePasswordResponse> {
+
+        return runCatching {
+
+            val response = apiService.changePassword(
+                currentPassword,
+                newPassword
+            )
+
+            // ⚠️ رمز عبور عمداً لاگ نمی‌شود
+            logD("changePassword response error=${response.error}")
+
+            if (response.error == true) {
+                return Result.Error(
+                    response.errorMsg
+                            ?: "تغییر رمز عبور ناموفق بود"
+                )
             }
 
             Result.Success(response)

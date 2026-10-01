@@ -5,6 +5,7 @@ import com.khz.madahi.models.response.ActivatePremiumResponse
 import com.khz.madahi.models.response.AppInfoResponse
 import com.khz.madahi.models.response.CategoriesResponse
 import com.khz.madahi.models.response.CategoryResponse
+import com.khz.madahi.models.response.ChangePasswordResponse
 import com.khz.madahi.models.response.ContentResponse
 import com.khz.madahi.models.response.CreatePremiumInvoiceResponse
 import com.khz.madahi.models.response.DataResponse
@@ -41,7 +42,8 @@ interface APIService {
     @FormUrlEncoded
     @POST("login.php")
     suspend fun login(
-        @Field("data") mobile: String
+        @Field("data") mobile: String,
+        @Field("password") password: String
     ): LoginResponse
 
     @FormUrlEncoded
@@ -50,6 +52,15 @@ interface APIService {
         @Field("data") mobile: String,
         @Field("full_name") fullName: String
     ): LoginResponse
+
+    // ============ تغییر رمز عبور (با توکن) ============
+    // تنها endpointی که کاربرِ دارای پرچم «الزام تغییر رمز» اجازهٔ صدا زدن دارد.
+    @FormUrlEncoded
+    @POST("changePassword.php")
+    suspend fun changePassword(
+        @Field("current_password") currentPassword: String,
+        @Field("new_password") newPassword: String
+    ): ChangePasswordResponse
 
     // ============ Categories (با توکن) ============
     // سرور امن از هدر Authorization توکن را می‌خواند؛

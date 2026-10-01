@@ -31,6 +31,11 @@ class LoginViewModel(
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName.asStateFlow()
 
+    // ✅ رمز عبور (فقط در حالت ورود استفاده می‌شود؛
+    // در ثبت‌نام رمز اولیه توسط سرور همان شمارهٔ موبایل گذاشته می‌شود)
+    private val _password = MutableStateFlow("")
+    val password: StateFlow<String> = _password.asStateFlow()
+
     private val _isLoginMode = MutableStateFlow(true)
     val isLoginMode: StateFlow<Boolean> = _isLoginMode.asStateFlow()
 
@@ -43,8 +48,13 @@ class LoginViewModel(
         _fullName.value = name
     }
 
+    fun updatePassword(password: String) {
+        _password.value = password
+    }
+
     fun toggleMode() {
         _isLoginMode.value = !_isLoginMode.value
+        _password.value = ""
         _uiState.value = LoginUiState.Idle
     }
 
@@ -62,7 +72,10 @@ class LoginViewModel(
             _uiState.value = LoginUiState.Loading
 
             val result = if (_isLoginMode.value) {
-                authRepository.login(_mobile.value)
+                authRepository.login(
+                    _mobile.value,
+                    _password.value
+                )
             } else {
                 authRepository.register(
                     _mobile.value,
@@ -78,8 +91,22 @@ class LoginViewModel(
                     preferencesManager.user = loginResponse.user
                     preferencesManager.isLoggedIn = true
                     preferencesManager.isFirstTimeLaunch = false
-// ✅ ذخیره توکن برای درخواست‌های بعدی
+                    // ✅ ذخیره توکن برای درخواست‌های بعدی
                     loginResponse.token?.let { preferencesManager.token = it }
+
+                    // ✅ رمز اولیه هنوز عوض نشده؛ سرور تا زمان تغییر رمز
+                    // بقیهٔ APIها را می‌بندد، پس باید مستقیم به صفحهٔ تغییر رمز برویم.
+                    val mustChange = loginResponse.mustChangePassword || loginResponse.user?.mustChangePassword == true
+                    preferencesManager.mustChangePassword = mustChange
+
+                    // رمز واردشده را از حافظهٔ ViewModel پاک می‌کنیم
+                    _password.value = ""
+
+                    if (mustChange) {
+                        _uiState.value = LoginUiState.NeedsPasswordChange
+                        return@launch
+                    }
+
                     // ✅ ذخیره دسته‌بندی‌ها در دیتابیس
                     loginResponse.categories?.let { categories ->
                         appDatabase.categoryDAO()
@@ -128,6 +155,12 @@ class LoginViewModel(
 
         if (!isValidIranianMobile(_mobile.value)) {
             _uiState.value = LoginUiState.Error("لطفاً شماره موبایل معتبر وارد کنید")
+            return false
+        }
+
+        // ✅ بررسی رمز عبور (فقط در حالت ورود)
+        if (_isLoginMode.value && _password.value.isBlank()) {
+            _uiState.value = LoginUiState.Error("لطفاً رمز عبور خود را وارد کنید")
             return false
         }
 

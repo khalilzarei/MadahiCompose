@@ -7,14 +7,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -37,8 +50,16 @@ fun GlassTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     hasError: Boolean = false,
     hint: String = "",
+    // ✅ ورودی رمز عبور: متن پنهان می‌شود و دکمهٔ نمایش/پنهان دارد
+    isPassword: Boolean = false,
 ) {
     val colors = LocalMadahiColors.current
+
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+
+    // چون متن وسط‌چین است، برای دکمهٔ چشم از دو طرف فاصلهٔ مساوی می‌گذاریم
+    // تا مرکز متن جابه‌جا نشود.
+    val horizontalPadding = if (isPassword) 46.dp else 14.dp
 
     Box(
         modifier = modifier
@@ -73,17 +94,46 @@ fun GlassTextField(
             onValueChange = onValueChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(
+                    start = horizontalPadding,
+                    end = horizontalPadding,
+                    top = 14.dp,
+                    bottom = 14.dp
+                ),
             textStyle = TextStyle(
                 color = colors.textPrimary,
                 fontSize = 17.sp,
                 lineHeight = 30.sp,
                 textAlign = TextAlign.Center
             ),
+            singleLine = isPassword,
+            visualTransformation = if (isPassword && !passwordVisible) {
+                PasswordVisualTransformation()
+            } else {
+                VisualTransformation.None
+            },
             keyboardOptions = KeyboardOptions(
-                keyboardType = keyboardType // این خط کیبورد عددی رو فعال میکنه
+                keyboardType = if (isPassword) KeyboardType.Password else keyboardType
             )
         )
+
+        // ✅ دکمهٔ نمایش/پنهان‌کردن رمز
+        if (isPassword) {
+            IconButton(
+                onClick = { passwordVisible = !passwordVisible },
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 4.dp)
+                    .size(38.dp)
+            ) {
+                Icon(
+                    imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription = if (passwordVisible) "پنهان‌کردن رمز عبور" else "نمایش رمز عبور",
+                    tint = colors.textMuted,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     }
 }
 
@@ -102,6 +152,22 @@ fun GlassTextFieldPreview() {
             onValueChange = {},
             minHeight = 58.dp,
             keyboardType = KeyboardType.Number
+        )
+    }
+}
+
+@Preview(
+    name = "Password Field Preview",
+    showBackground = false,
+)
+@Composable
+fun GlassPasswordFieldPreview() {
+    MadahiThemeGreen(darkTheme = true) {
+        GlassTextField(
+            value = "123456",
+            onValueChange = {},
+            isPassword = true,
+            hint = "رمز عبور"
         )
     }
 }

@@ -15,6 +15,11 @@ class LoginResponse {
     @SerializedName("user")
     var user: User? = null
 
+    // ✅ true یعنی رمز عبور هنوز رمز اولیه (= شماره موبایل) است و
+    // باید پیش از استفاده از اپ تغییر کند.
+    @SerializedName("must_change_password")
+    var mustChangePassword: Boolean = false
+
     @SerializedName("categories")
     var categories: MutableList<Category>? = null
 

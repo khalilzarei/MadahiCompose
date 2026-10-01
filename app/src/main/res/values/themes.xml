@@ -13,16 +13,8 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
         <!-- شفاف کردن System Bar -->
-        <item name="android:statusBarColor">
-            @android:color/transparent
-        </item>
-
-        <item name="android:navigationBarColor">
-            @android:color/transparent
-        </item>
-
-        <!-- Status bar icon appearance -->
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
 
     </style>
 

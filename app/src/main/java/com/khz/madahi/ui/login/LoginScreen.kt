@@ -59,7 +59,8 @@ import com.khz.madahi.utils.NetworkChecker
 
 @Composable
 fun LoginScreen(
-    onNavigateToAppSelection: () -> Unit
+    onNavigateToAppSelection: () -> Unit,
+    onNavigateToChangePassword: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -81,14 +82,16 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val mobile by viewModel.mobile.collectAsState()
     val fullName by viewModel.fullName.collectAsState()
+    val password by viewModel.password.collectAsState()
     val isLoginMode by viewModel.isLoginMode.collectAsState()
 
     // ============ Effects ============
     LaunchedEffect(uiState) {
         when (uiState) {
             is LoginUiState.Success -> onNavigateToAppSelection()
-            is LoginUiState.Error   -> errorMessage = (uiState as LoginUiState.Error).message
-            else                    -> Unit
+            is LoginUiState.NeedsPasswordChange -> onNavigateToChangePassword()
+            is LoginUiState.Error -> errorMessage = (uiState as LoginUiState.Error).message
+            else -> Unit
         }
     }
 
@@ -97,10 +100,12 @@ fun LoginScreen(
         isLoginMode = isLoginMode,
         fullName = fullName,
         mobile = mobile,
+        password = password,
         isLoading = uiState is LoginUiState.Loading,
         errorMessage = errorMessage,
         onFullNameChange = viewModel::updateFullName,
         onMobileChange = viewModel::updateMobile,
+        onPasswordChange = viewModel::updatePassword,
         onToggleMode = viewModel::toggleMode,
         onSubmit = viewModel::submit
     )
@@ -115,10 +120,12 @@ fun LoginScreenContent(
     isLoginMode: Boolean,               // true = ورود ، false = ثبت‌نام
     fullName: String,
     mobile: String,
+    password: String,
     isLoading: Boolean,
     errorMessage: String?,
     onFullNameChange: (String) -> Unit,
     onMobileChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
     onToggleMode: () -> Unit,
     onSubmit: () -> Unit
 ) {
@@ -199,6 +206,35 @@ fun LoginScreenContent(
                         keyboardType = KeyboardType.Number
                     )
 
+                    // ✅ رمز عبور — فقط در حالت ورود
+                    if (isLoginMode) {
+                        Spacer(Modifier.height(16.dp))
+
+                        Text(
+                            text = "رمز عبور",
+                            color = colors.textSecondary,
+                            fontSize = 14.sp
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        GlassTextField(
+                            value = password,
+                            onValueChange = onPasswordChange,
+                            isPassword = true
+                        )
+                    } else {
+                        // در ثبت‌نام رمز اولیه همان شمارهٔ موبایل است
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = "رمز عبور اولیهٔ شما همان شمارهٔ موبایل است و پس از اولین ورود باید آن را تغییر دهید.",
+                            color = colors.textMuted,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
                     // پیام خطا
                     errorMessage?.let { msg ->
                         Spacer(Modifier.height(12.dp))
@@ -260,10 +296,12 @@ private fun LoginScreenPreview() {
             isLoginMode = true,
             fullName = "",
             mobile = "0912",
+            password = "123456",
             isLoading = false,
             errorMessage = null,
             onFullNameChange = {},
             onMobileChange = {},
+            onPasswordChange = {},
             onToggleMode = {},
             onSubmit = {})
     }
@@ -277,10 +315,12 @@ private fun RegisterScreenPreview() {
             isLoginMode = false,
             fullName = "کاربر نمونه",
             mobile = "09123456789",
+            password = "",
             isLoading = false,
             errorMessage = "شماره موبایل معتبر نیست",
             onFullNameChange = {},
             onMobileChange = {},
+            onPasswordChange = {},
             onToggleMode = {},
             onSubmit = {})
     }

@@ -28,6 +28,7 @@ import com.khz.madahi.ui.appselection.AppSelectionScreen
 import com.khz.madahi.ui.booklet.BookletDetailScreen
 import com.khz.madahi.ui.booklet.BookletScreen
 import com.khz.madahi.ui.category.CategoryScreen
+import com.khz.madahi.ui.changepassword.ChangePasswordScreen
 import com.khz.madahi.ui.common.BottomBarActions
 import com.khz.madahi.ui.content.ContentScreen
 import com.khz.madahi.ui.contentdetail.ContentDetailScreen
@@ -86,6 +87,9 @@ sealed class Screen(val route: String) {
     object FavoritesScreen : Screen("favorites")
     object ProfileScreen : Screen("profile")
     object PoemsScreen : Screen("poems")   // 🎧 شعر و سبک (نسخه پرو)
+
+    // ✅ تغییر اجباری رمز عبور بعد از اولین ورود با رمز اولیه
+    object ChangePasswordScreen : Screen("changePassword")
 }
 
 @Composable
@@ -145,6 +149,11 @@ fun NavGraph(
                         popUpTo(Screen.SplashScreen.route) { inclusive = true }
                     }
                 },
+                onNavigateToChangePassword = {
+                    navController.navigate(Screen.ChangePasswordScreen.route) {
+                        popUpTo(Screen.SplashScreen.route) { inclusive = true }
+                    }
+                },
                 onNavigateToAppSelection = {
                     navController.navigate(Screen.AppSelectionScreen.route) {
                         popUpTo(Screen.SplashScreen.route) { inclusive = true }
@@ -173,6 +182,25 @@ fun NavGraph(
                 onNavigateToAppSelection = {
                     navController.navigate(Screen.AppSelectionScreen.route) {
                         popUpTo(Screen.LoginScreen.route) { inclusive = true }
+                    }
+                },
+                onNavigateToChangePassword = {
+                    navController.navigate(Screen.ChangePasswordScreen.route) {
+                        popUpTo(Screen.LoginScreen.route) { inclusive = true }
+                    }
+                })
+        }
+
+        // ============ تغییر اجباری رمز عبور ============
+        // از Login و از Splash (وقتی کاربر هنوز رمز اولیه را عوض نکرده) می‌آییم.
+        // بعد از موفقیت، صفحهٔ ورود هم از stack پاک می‌شود تا کاربر
+        // نتواند با Back به فرم ورود برگردد.
+        composable(Screen.ChangePasswordScreen.route) {
+            ChangePasswordScreen(
+                onPasswordChanged = {
+                    navController.navigate(Screen.AppSelectionScreen.route) {
+                        popUpTo(Screen.LoginScreen.route) { inclusive = true }
+                        popUpTo(Screen.ChangePasswordScreen.route) { inclusive = true }
                     }
                 })
         }

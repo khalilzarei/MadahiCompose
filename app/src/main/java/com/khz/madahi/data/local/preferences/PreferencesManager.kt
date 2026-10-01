@@ -39,6 +39,20 @@ class PreferencesManager(private val context: Context) {
             )
         }
 
+    // ✅ کاربر هنوز رمز اولیه (= شماره موبایل) را تغییر نداده است.
+    // تا وقتی true باشد، بعد از ورود مستقیم به صفحهٔ تغییر رمز می‌رویم.
+    var mustChangePassword: Boolean
+        get() = prefs.getBoolean(
+            MUST_CHANGE_PASSWORD,
+            false
+        )
+        set(value) = prefs.edit {
+            putBoolean(
+                MUST_CHANGE_PASSWORD,
+                value
+            )
+        }
+
     var isNightMode: Boolean
         get() = prefs.getBoolean(
             IS_NIGHT_MODE,
@@ -138,6 +152,7 @@ class PreferencesManager(private val context: Context) {
             remove(IS_LOGGED_IN)
             remove(USER_KEY)
             remove(KEY_TOKEN)
+            remove(MUST_CHANGE_PASSWORD)
         }
     }
 
@@ -148,6 +163,7 @@ class PreferencesManager(private val context: Context) {
         private const val IS_NIGHT_MODE = "is_night_mode"
         private const val IS_LOGGED_IN = "is_logged_in"
         private const val KEY_TOKEN = "token_key"          // ✅ جدید
+        private const val MUST_CHANGE_PASSWORD = "must_change_password_key"
         private const val KEY_FONT = "font_key"
         private const val KEY_FONT_SIZE = "font_size_key"
         private const val KEY_CONTENT_FONT_SIZE = "content_font_size_key"

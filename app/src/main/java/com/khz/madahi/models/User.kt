@@ -10,5 +10,8 @@ class User(
     @SerializedName("email") var email: String? = null,
     @SerializedName("mobile") var mobile: String? = null,
     @SerializedName("create_at") var createAt: String? = null,
-    @SerializedName("update_at") var updateAt: String? = null
+    @SerializedName("update_at") var updateAt: String? = null,
+    // ✅ اگر true باشد کاربر هنوز رمز اولیه (= شماره موبایل) را عوض نکرده
+    // و سرور تا زمان تغییر رمز، بقیهٔ APIها را می‌بندد.
+    @SerializedName("must_change_password") var mustChangePassword: Boolean = false
 )

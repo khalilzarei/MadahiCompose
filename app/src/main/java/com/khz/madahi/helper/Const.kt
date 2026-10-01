@@ -17,3 +17,7 @@ const val TABLE_NAME_MESSAGE: String = "table_name_message"
 // ViewModel ها) به‌صورت رشته‌ی جادویی "0" پخش شده بود، الان یک‌جا تعریف شده.
 // در فایل‌های دیگر به‌جای "0" از GUEST_USER_ID استفاده کنید.
 const val GUEST_USER_ID: Int = 0
+
+// حداقل طول رمز عبور — باید با PASSWORD_MIN_LENGTH در config سرور یکی باشد.
+// اعتبارسنجی اصلی سمت سرور انجام می‌شود؛ این فقط برای پیام‌دهی سریع در اپ است.
+const val PASSWORD_MIN_LENGTH: Int = 6
