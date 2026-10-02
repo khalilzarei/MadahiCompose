@@ -16,6 +16,8 @@ android {
         versionName = "2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        manifestPlaceholders["TapsellMediationAppKey"] = "gcjhmacmancattfcaeqtqgtdpqckkjrmgefephhlsaadnjppidndrilmbkpdticrcigihl"
     }
 
     buildTypes {
@@ -95,6 +97,8 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.material)
     implementation(libs.smart.exception.java)
+
+    implementation(libs.tapsell.plus.sdk.android)
 }
 
 ksp {

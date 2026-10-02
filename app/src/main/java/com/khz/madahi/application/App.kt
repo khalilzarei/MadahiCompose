@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.api.RetrofitClient
+import com.khz.madahi.ui.ads.AdsManager
 
 class App : Application() {
 
@@ -21,6 +22,7 @@ class App : Application() {
         super.onCreate()
         instance = this
 
+        AdsManager.initialize(this)
         // ✅ مقداردهی اولیه RetrofitClient (برای اینترسپتور توکن)
         RetrofitClient.init(this)
 
