@@ -1,8 +1,6 @@
 package com.khz.madahi.ui.ads
 
 import android.app.Activity
-import android.util.Log
-import ir.tapsell.plus.TapsellPlus
 
 object TapsellInterstitial {
 
@@ -16,34 +14,34 @@ object TapsellInterstitial {
         onError: (String) -> Unit = {}
     ) {
 
-        TapsellPlus.requestInterstitialAd(
-            zoneId
-        ) { response ->
-
-            responseId = response
-
-            Log.d(
-                TAG,
-                "Interstitial ready: $response"
-            )
-
-            onReady(response)
-
-        }
-            .catch { throwable ->
-
-                val message = throwable.message
-                        ?: "Unknown error"
-
-                responseId = null
-
-                Log.e(
-                    TAG,
-                    "Interstitial request failed: $message"
-                )
-
-                onError(message)
-            }
+//        requestInterstitialAd(
+//            zoneId
+//        ) { response ->
+//
+//            responseId = response
+//
+//            Log.d(
+//                TAG,
+//                "Interstitial ready: $response"
+//            )
+//
+//            onReady(response)
+//
+//        }
+//            .catch { throwable ->
+//
+//                val message = throwable.message
+//                        ?: "Unknown error"
+//
+//                responseId = null
+//
+//                Log.e(
+//                    TAG,
+//                    "Interstitial request failed: $message"
+//                )
+//
+//                onError(message)
+//            }
     }
 
     fun show(
@@ -65,31 +63,31 @@ object TapsellInterstitial {
             return
         }
 
-        TapsellPlus.showInterstitialAd(
-            id,
-
-            onOpened = {
-                Log.d(
-                    TAG,
-                    "Interstitial opened"
-                )
-
-                onOpened()
-            },
-
-            onError = { error ->
-
-                val message = error.toString()
-
-                Log.e(
-                    TAG,
-                    "Interstitial show failed: $message"
-                )
-
-                this.responseId = null
-
-                onError(message)
-            })
+//        TapsellPlus.showInterstitialAd(
+//            id,
+//
+//            onOpened = {
+//                Log.d(
+//                    TAG,
+//                    "Interstitial opened"
+//                )
+//
+//                onOpened()
+//            },
+//
+//            onError = { error ->
+//
+//                val message = error.toString()
+//
+//                Log.e(
+//                    TAG,
+//                    "Interstitial show failed: $message"
+//                )
+//
+//                this.responseId = null
+//
+//                onError(message)
+//            })
 
         this.responseId = null
     }
