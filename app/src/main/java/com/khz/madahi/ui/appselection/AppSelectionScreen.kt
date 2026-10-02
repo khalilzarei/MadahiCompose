@@ -53,13 +53,6 @@ import com.khz.madahi.ui.theme.primaryDark
 import com.khz.madahi.ui.theme.textMuted
 import com.khz.madahi.ui.theme.textPrimary
 
-// ============================================================
-// صفحه انتخاب بخش — بعد از ورود نمایش داده می‌شود
-// ------------------------------------------------------------
-// - دفترچه (داشبورد اصلی — رایگان)
-// - کتابچه (نسخه جدید — فقط پرمیوم)
-// ============================================================
-
 @Composable
 fun AppSelectionScreen(
     onNavigateToCategory: () -> Unit,
@@ -116,6 +109,8 @@ private fun AppSelectionContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+
+
                 Text(
                     text = "مداحی",
                     color = colors.textPrimary,

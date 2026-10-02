@@ -215,13 +215,20 @@ fun LoginScreenContent(
                             color = colors.textSecondary,
                             fontSize = 14.sp
                         )
-
                         Spacer(Modifier.height(8.dp))
 
                         GlassTextField(
                             value = password,
                             onValueChange = onPasswordChange,
                             isPassword = true
+                        )
+
+                        Text(
+                            text = "رمز عبور اولیهٔ شما همان شمارهٔ موبایل است و پس از اولین ورود باید آن را تغییر دهید.",
+                            color = colors.textMuted,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     } else {
                         // در ثبت‌نام رمز اولیه همان شمارهٔ موبایل است
@@ -261,8 +268,7 @@ fun LoginScreenContent(
                         Spacer(Modifier.height(12.dp))
                         CircularProgressIndicator(
                             color = colors.gold,
-                            modifier = Modifier
-                                .size(26.dp)
+                            modifier = Modifier.size(26.dp)
                                 .align(Alignment.CenterHorizontally)
                         )
                     }

@@ -17,8 +17,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        manifestPlaceholders["TapsellMediationAppKey"] = "gcjhmacmancattfcaeqtqgtdpqckkjrmgefephhlsaadnjppidndrilmbkpdticrcigihl"
     }
+
 
     buildTypes {
         release {
@@ -98,7 +98,6 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.smart.exception.java)
 
-    implementation(libs.tapsell.plus.sdk.android)
 }
 
 ksp {
