@@ -8,6 +8,7 @@ import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.ContentRepository
 import com.khz.madahi.helper.GUEST_USER_ID
 import com.khz.madahi.helper.extention.cleanForServer
+import com.khz.madahi.helper.extention.stripHtmlWrapper
 import com.khz.madahi.models.Category
 import com.khz.madahi.models.Content
 import com.khz.madahi.utils.Result
@@ -155,7 +156,9 @@ class ContentViewModel(
     fun showEditDialog(content: Content) {
         _dialogSubject.value = content.subject
         _dialogAnswer.value = content.answer
-        _dialogContent.value = content.content
+        // ⚠️ رفع باگ: متن ذخیره‌شده به‌همراه تگ‌های <p> نمایش داده می‌شد و
+        // هنگام ذخیره دوباره در <p> پیچیده می‌شد → تگ‌های تودرتو
+        _dialogContent.value = content.content.stripHtmlWrapper()
         _isNoheh.value = content.contentType == "0"
         _editingContent.value = content
         _subjectError.value = null

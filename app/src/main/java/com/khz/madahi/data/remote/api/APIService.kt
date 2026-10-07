@@ -122,6 +122,9 @@ interface APIService {
         @Field("answer") answer: String,
         @Field("content") content: String,
         @Field("subject") subject: String,
+        // ⚠️ رفع باگ: این فیلد قبلاً ارسال نمی‌شد و سرور در هر ویرایش
+        // content_type را به ۰ (نوحه) ریست می‌کرد
+        @Field("content_type") contentType: String
     ): ContentResponse
 
     @FormUrlEncoded

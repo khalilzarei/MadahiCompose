@@ -22,7 +22,8 @@ class AuthInterceptor(
             chain.request()
         } else {
             val header = "Bearer $token"
-            logD("intercept $header")
+            // ⚠️ فقط بخشی از توکن لاگ می‌شود (در Release همه‌ی لاگ‌ها بی‌اثرند)
+            logD("intercept Bearer ${token.take(6)}…")
             chain.request()
                 .newBuilder()
                 .header(

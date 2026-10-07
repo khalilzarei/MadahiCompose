@@ -10,6 +10,7 @@ import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.repository.ContentRepository
 import com.khz.madahi.data.remote.repository.PremiumRepository
 import com.khz.madahi.helper.GUEST_USER_ID
+import com.khz.madahi.helper.extention.cleanForServer
 import com.khz.madahi.helper.extention.logD
 import com.khz.madahi.helper.extention.logE
 import com.khz.madahi.models.Content
@@ -411,6 +412,52 @@ class ContentDetailViewModel(
                     logD("ensurePremium: error ${result.message} — allow try")
                     onResult(true)
                 }
+
+                is Result.Loading -> { /* ignore */
+                }
+            }
+        }
+    }
+
+    // ============ ویرایش متن شعر ============
+    // ⚠️ رفع باگ: دکمه‌ی «ذخیره» در صفحه جزئیات قبلاً به هیچ تابعی
+    // وصل نبود و تغییرات کاربر بی‌صدا دور ریخته می‌شد
+    fun editContent(
+        content: Content,
+        newSubject: String,
+        newAnswer: String,
+        newContentText: String,
+        onSuccess: (Content) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            val subject = newSubject.cleanForServer()
+            val answer = newAnswer.cleanForServer()
+            val contentText = newContentText.cleanForServer()
+
+            if (subject.isEmpty() || contentText.isEmpty()) {
+                onError("عنوان و متن نمی‌توانند خالی باشند")
+                return@launch
+            }
+
+            val updated = content.copy(
+                subject = subject,
+                answer = answer,
+                content = "<p>$contentText</p>"
+            )
+
+            when (val result = contentRepository.updateContent(updated)) {
+                is Result.Success -> {
+                    try {
+                        appDatabase.contentDAO()
+                            .update(updated)
+                    } catch (e: Exception) {
+                        logE("editContent: local update error $e")
+                    }
+                    onSuccess(updated)
+                }
+
+                is Result.Error   -> onError(result.message)
 
                 is Result.Loading -> { /* ignore */
                 }

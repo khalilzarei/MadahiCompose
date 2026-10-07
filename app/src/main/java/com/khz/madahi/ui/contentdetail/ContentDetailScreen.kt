@@ -2,9 +2,6 @@
 package com.khz.madahi.ui.contentdetail
 
 import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,6 +30,7 @@ import com.khz.madahi.data.local.database.AppDatabase
 import com.khz.madahi.data.local.preferences.PreferencesManager
 import com.khz.madahi.data.remote.api.RetrofitClient
 import com.khz.madahi.data.remote.repository.ContentRepository
+import com.khz.madahi.helper.extention.stripHtmlWrapper
 import com.khz.madahi.models.Content
 import com.khz.madahi.ui.audio.AddVoiceDialog
 import com.khz.madahi.ui.audio.VoicePlayerCard
@@ -129,18 +127,9 @@ fun ContentDetailScreen(
     // ============ وضعیت دیالوگ افزودن ویس ============
     var showAddVoiceDialog by remember { mutableStateOf(false) }
 
-    // ============ انتخاب فایل صوتی (برای حالت مستقیم) ============
-    val audioPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) {
-            viewModel.uploadAudio(
-                context,
-                content,
-                uri
-            )
-        }
-    }
+    // ⚠️ کد مرده‌ی audioPicker حذف شد — هرگز launch نمی‌شد و اگر هم
+    // می‌شد، فایل را بدون عبور از AddVoiceDialog (بدون کات و چک حجم)
+    // مستقیم آپلود می‌کرد که سرور رد می‌کرد.
 
     fun requestAddAudio() {
         viewModel.ensurePremium { isPro ->
@@ -193,27 +182,7 @@ fun ContentDetailScreen(
     }
 
     // ============ متن نمایشی ============
-    val displayContent = currentContent.content.replace(
-        "<p>",
-        ""
-    )
-        .replace(
-            "</p>",
-            ""
-        )
-        .replace(
-            "<br>",
-            ""
-        )
-        .replace(
-            "<br/>",
-            ""
-        )
-        .replace(
-            "<br />",
-            ""
-        )
-        .trim()
+    val displayContent = currentContent.content.stripHtmlWrapper()
 
     // ============ اشتراکگذاری ============
     val onShare = {
@@ -257,6 +226,18 @@ fun ContentDetailScreen(
             viewModel.toggleFavorite(content) { onFavoriteChanged() }
         },
         onShare = onShare,
+        onSaveEdit = { subject, answer, text ->
+            viewModel.editContent(
+                content = currentContent,
+                newSubject = subject,
+                newAnswer = answer,
+                newContentText = text,
+                onSuccess = { updatedContent ->
+                    currentContent = updatedContent
+                },
+                onError = { msg -> deleteError = msg }
+            )
+        },
         onNavigateBack = onNavigateBack,
         onDeleteClick = { showDeleteDialog = true },
         onAddAudioClick = { requestAddAudio() },
@@ -356,12 +337,14 @@ fun ContentDetailScreenContent(
     onDeleteClick: () -> Unit,
     onAddAudioClick: () -> Unit = {},
     onDeleteAudioClick: () -> Unit = {},
-    onClearUploadError: () -> Unit = {}
+    onClearUploadError: () -> Unit = {},
+    onSaveEdit: (subject: String, answer: String, content: String) -> Unit = { _, _, _ -> }
 ) {
     val colors = LocalMadahiColors.current
 
     // ============ state ویرایش ============
-    var isEditing by remember { mutableStateOf(true) }
+    // ⚠️ رفع باگ: مقدار اولیه true بود و صفحه لحظه‌ای در حالت ویرایش باز می‌شد
+    var isEditing by remember { mutableStateOf(false) }
     var editSubject by remember { mutableStateOf(content.subject) }
     var editAnswer by remember { mutableStateOf(content.answer) }
     var editContent by remember { mutableStateOf(displayContent) }
@@ -517,7 +500,9 @@ fun ContentDetailScreenContent(
                         text = "ذخیره",
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            // اینجا باید به ViewModel وصل شود
+                            // ⚠️ رفع باگ: قبلاً فقط حالت ویرایش بسته می‌شد و
+                            // تغییرات ذخیره نمی‌شدند — الان به ViewModel وصل است
+                            onSaveEdit(editSubject, editAnswer, editContent)
                             isEditing = false
                         })
                 }

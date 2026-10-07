@@ -26,7 +26,7 @@ class AuthRepository(
             // ⚠️ رمز عبور عمداً لاگ نمی‌شود
             logD("login response error=${response.error}, mustChangePassword=${response.mustChangePassword}")
 
-            if (response.error == true) {
+            if (response.error) {
 
                 return Result.Error(
                     response.errorMsg

@@ -175,7 +175,8 @@ class ContentRepository(
                 content.id,
                 content.answer,
                 content.content,
-                content.subject
+                content.subject,
+                content.contentType
             )
 
             Log.d(
@@ -551,8 +552,10 @@ class ContentRepository(
             val response = apiService.uploadAudio(
                 userId = createTextPart(userId.toString()),
                 contentId = createTextPart(content.id.toString()),
-                startSec = createTextPart("-1"),
-                durationSec = createTextPart("-1"),
+                // ⚠️ رفع باگ: قبلاً پارامترهای startSec/durationSec نادیده
+                // گرفته می‌شدند و همیشه "-1" ارسال می‌شد
+                startSec = createTextPart(startSec.toString()),
+                durationSec = createTextPart(durationSec.toString()),
                 audio = audioPart
             )
 

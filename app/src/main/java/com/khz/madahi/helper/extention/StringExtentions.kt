@@ -26,3 +26,29 @@ fun String.sanitizeForServer(): String = this.filter { it.code !in 0xD800..0xDFF
  */
 fun String.cleanForServer(): String = this.sanitizeForServer()
     .trim()
+
+/**
+ * برداشتن تگ‌های پوششی <p>/<br> که هنگام ذخیره دور متن پیچیده می‌شود.
+ * برای نمایش/ویرایش متن خام استفاده می‌شود تا تگ‌ها دوباره تودرتو نشوند.
+ */
+fun String.stripHtmlWrapper(): String = this.replace(
+    "<p>",
+    ""
+)
+    .replace(
+        "</p>",
+        ""
+    )
+    .replace(
+        "<br>",
+        ""
+    )
+    .replace(
+        "<br/>",
+        ""
+    )
+    .replace(
+        "<br />",
+        ""
+    )
+    .trim()
